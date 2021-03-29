@@ -18,7 +18,7 @@ args.io.filename_data = 'atoms_aberrations24.h5'
 
 summary = setup_logging(args.io.path, args.io.logname)
 
-args.dist_backend = 'mpi'  # 'mpi'
+args.dist_backend = 'mpi'  # 'mpi'1
 args.dist_init_method = f'file://{args.io.path}sharedfile'
 args.node_config = configure_node(args.dist_backend, args.dist_init_method)
 
@@ -29,15 +29,15 @@ args.uniform_initial_intensity = False
 
 dC1 = 30
 # %% load data
-i=0
-args.io.filename_results = f'random4_dC{dC1}perc_res_{i+5:03d}.h5'
+i = 0
+args.io.filename_results = f'random4_dC{dC1}perc_res_{i + 5:03d}.h5'
 world_size = args.node_config.world_size
 rank = args.node_config.rank
 device = args.node_config.device
 
 lam, alpha_rad, C, dx, specimen_thickness_angstrom, vacuum_probe, D, K, K_rank, MY, MX, NY, NX, \
 fy, fx, detector_shape, r, I_target, y_max, x_max, y_min, x_min, S_sol, Psi_sol, r_sol = load_smatrix_data_list2(
-    args.io.path + args.io.filename_data, device, rank, world_size, subset=[0,1,2,3])
+    args.io.path + args.io.filename_data, device, rank, world_size, subset=[0, 1, 2, 3])
 # dx = 1/2/dx
 lam *= 1e10
 
@@ -74,17 +74,22 @@ S0, depth_init = initial_smatrix(S_shape, beam_numbers, device, is_unitary=True,
                                  initial_depth=specimen_thickness_angstrom, lam=lam, q2=q2,
                                  is_pinned=False)
 
-
 tile_numbers = beam_numbers[beam_numbers >= 0]
 beam_numbers = th.ones_like(take_beams).cpu().long() * -1
 beam_numbers[take_beams] = th.arange(B)
 # %% define S-matrix forward and adjoint operators
 from smpr3d.operators import A as A1, AH_S as AH_S1
+
 r_min = th.zeros(2, device=device)
+
+
 def A(S, Psi, r):
     return A1(S, Psi, r, r_min=r_min, out=None, Mx=MX, My=MY)
+
+
 def AH_S(S, Psi, r):
     return AH_S1(S, Psi, r, r_min=r_min, out=None, tau=th.tensor([1.0]).to(device), Ny=NY, Nx=NX)
+
 
 AH_Psi = None
 AH_r = None
@@ -134,17 +139,18 @@ fpr2 = Psi_model[0].cpu().numpy()
 pr2 = np.fft.ifft2(fpr2, norm='ortho')
 
 from smpr3d.core import SMeta
-s_meta = SMeta(take_beams,dx,S_shape,MY,MX,device)
 
+s_meta = SMeta(take_beams, dx, S_shape, MY, MX, device)
+print(s_meta.q_dft)
 # report_initial_probes(summary, rank, world_size, Psi_model, psi_model, C_model, specimen_thickness_angstrom, q, lam,
 #                       alpha_rad)
 # %% perform reconstruction
 # m = [MY, MX]
 # plotAbsAngle(complex_numpy(S_sol[0, m[0]:-m[0], m[1]:-m[1]].cpu()), f'S_sol[{0}]')
 args.reconstruction_opts = Param()
-args.reconstruction_opts.max_iters = 120
+args.reconstruction_opts.max_iters = 100
 args.reconstruction_opts.beta = 1.0
-args.reconstruction_opts.tau_S = 1e-1
+args.reconstruction_opts.tau_S = 1e-2
 args.reconstruction_opts.tau_Psi = 1e6
 args.reconstruction_opts.tau_r = 8e-3
 args.reconstruction_opts.optimize_psi = lambda i: i > 1e3
@@ -153,10 +159,11 @@ args.reconstruction_opts.verbose = 2
 
 r0 = r
 Psi0 = Psi_sol
-(S_n, Psi_n, C_n, r_n), outs, opts = fasta2(s_meta, A, AH_S, AH_Psi, AH_r, prox_D_gaussian, Psi_gen, a, S0, Psi0, C_model,
-                                       Ap0, r0, args.reconstruction_opts, S_sol=S_sol, Psi_sol=Psi_sol, r_sol=r_sol,
-                                       summary=summary)
-
+(S_n, Psi_n, C_n, r_n), outs, opts = fasta2(s_meta, A, AH_S, AH_Psi, AH_r, prox_D_gaussian, Psi_gen, a, S0, Psi0,
+                                            C_model,
+                                            Ap0, r0, args.reconstruction_opts, S_sol=S_sol, Psi_sol=Psi_sol,
+                                            r_sol=r_sol,
+                                            summary=summary)
 
 # save_results(rank, S_n, Psi_n, C_n, r_n, outs, S_sol, Psi_sol, r_sol, beam_numbers, tile_map, alpha_map, A.coords, A.inds,
 #              take_beams, lam, alpha_rad, dx, specimen_thickness_angstrom, args.io.path + args.io.filename_results)
