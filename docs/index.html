@@ -6,8 +6,8 @@ title: smpr3d
 keywords: fastai
 sidebar: home_sidebar
 
-summary: "smpr3d (pronounced 'semper 3d', latin for 'always 3d', short for **S**-**M**atrix **P**hase **R**etrieval & **3D** imaging, simplifies recovering 3D phase-contrast information from scanning diffraction measurements, such as those collected in 4D-STEM experiments)"
-description: "smpr3d (pronounced 'semper 3d', latin for 'always 3d', short for **S**-**M**atrix **P**hase **R**etrieval & **3D** imaging, simplifies recovering 3D phase-contrast information from scanning diffraction measurements, such as those collected in 4D-STEM experiments)"
+summary: "smpr3d (pronounced 'semper 3D', latin for 'always 3D', short for **S**-**M**atrix **P**hase **R**etrieval & **3D** imaging, simplifies recovering 3D phase-contrast information from scanning diffraction measurements, such as those collected in **4D**-**S**canning **T**ransmission **E**lectron **M**icroscopy (4D-STEM) experiments)"
+description: "smpr3d (pronounced 'semper 3D', latin for 'always 3D', short for **S**-**M**atrix **P**hase **R**etrieval & **3D** imaging, simplifies recovering 3D phase-contrast information from scanning diffraction measurements, such as those collected in **4D**-**S**canning **T**ransmission **E**lectron **M**icroscopy (4D-STEM) experiments)"
 nb_path: "nbs/index.ipynb"
 ---
 <!--
@@ -31,6 +31,12 @@ nb_path: "nbs/index.ipynb"
 
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="Requirements">Requirements<a class="anchor-link" href="#Requirements"> </a></h2>
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="Install">Install<a class="anchor-link" href="#Install"> </a></h2>
 </div>
 </div>
@@ -44,7 +50,22 @@ nb_path: "nbs/index.ipynb"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="How-to-use">How to use<a class="anchor-link" href="#How-to-use"> </a></h2>
+<h2 id="Hackathon---How-to-use-on-the-nesap-cluster">Hackathon - How to use on the nesap cluster<a class="anchor-link" href="#Hackathon---How-to-use-on-the-nesap-cluster"> </a></h2><p><code>git clone git@github.com:s-matrix/smpr3d.git</code>
+<code>module purge</code>
+<code>module load cgpu</code>
+<code>module load pytorch/1.8.0-gpu</code>
+<code>cd smpr3d</code>
+<code>python setup.py install --user</code>
+<code>cd examples</code>
+<code>sbatch slurm.sh</code></p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h2 id="How-to-contribute">How to contribute<a class="anchor-link" href="#How-to-contribute"> </a></h2><p><code>nbdev_build_lib &amp;&amp; nbdev_clean_nbs &amp;&amp; nbdev_build_docs</code></p>
+
 </div>
 </div>
 </div>

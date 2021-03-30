@@ -1,0 +1,46 @@
+
+pytorch only supports complex numbers from v 1.7
+therefore, all complex arrays are dtype float32, with real and imaginary part in the last dimension, i.e
+the last dimension is always 2 for complex arrays
+
+The following is the naming convention throughout the code:
+
+Constants:
+
+B           number of beams
+B_tile      number of beams, intended for an extension of the code later on, B_tile <= B
+NY, NX      lateral size of the S-matrix in pixels
+MY, MX      lateral size of the detector in pixels
+K           number of scan positions
+K_rank      number of scan positions computed by this rank
+D           number of different aberrations
+
+running indices of these constants are always the same letter in lowercase
+
+Variables:
+
+S           shape (B_tile, NY, NX, 2) complex S-matrix variable
+z           shape (D, K_rank, MY, MX, 2) complex variable for exit waves, result of A(S, Psi, r), i.e the forward operation
+Psi         shape (D, MY, MX, 2) complex variable for the probes
+r           shape (D, K, 2) float variable for the scan positions
+
+The locations of the code for the important equations in the paper:
+
+1) forward operation: (Equ. 9) in the paper can be found in files
+    smatrix2.operators.s_matrix.kernel_wrappers.A_fast_full
+
+    I have started converting it to a complex matrix multiplication with index reordering in file
+
+    smatrix2.operators.s_matrix.kernel_wrappers.A_fast_full2
+
+2) backward operation: (Equ. 15, 16) in the paper can be found in files
+
+    smatrix2.operators.s_matrix.kernel_wrappers.AH_S_fast
+    smatrix2.operators.s_matrix.kernel_wrappers.AH_Psi_full
+
+A wrapper class around these functions are the classes smatrix2.operators.s_matrix.SMatrixExitWave and
+smatrix2.operators.s_matrix.SMatrixExitWaveAdjointProbe.
+
+
+
+
