@@ -47,7 +47,7 @@ nb_path: "nbs/01a_util_plot.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="HSV_to_RGB" class="doc_header"><code>HSV_to_RGB</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L953" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>HSV_to_RGB</code>(<strong><code>cin</code></strong>)</p>
+<h4 id="HSV_to_RGB" class="doc_header"><code>HSV_to_RGB</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L955" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>HSV_to_RGB</code>(<strong><code>cin</code></strong>)</p>
 </blockquote>
 <p>HSV to RGB transformation.</p>
 
@@ -72,7 +72,7 @@ nb_path: "nbs/01a_util_plot.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="P1A_to_HSV" class="doc_header"><code>P1A_to_HSV</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L979" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>P1A_to_HSV</code>(<strong><code>cin</code></strong>, <strong><code>vmin</code></strong>=<em><code>None</code></em>, <strong><code>vmax</code></strong>=<em><code>None</code></em>)</p>
+<h4 id="P1A_to_HSV" class="doc_header"><code>P1A_to_HSV</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L981" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>P1A_to_HSV</code>(<strong><code>cin</code></strong>, <strong><code>vmin</code></strong>=<em><code>None</code></em>, <strong><code>vmax</code></strong>=<em><code>None</code></em>)</p>
 </blockquote>
 <p>Transform a complex array into an RGB image,
 mapping phase to hue, amplitude to value and
@@ -99,7 +99,7 @@ keeping maximum saturation.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="imsave" class="doc_header"><code>imsave</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L998" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>imsave</code>(<strong><code>a</code></strong>, <strong><code>filename</code></strong>=<em><code>None</code></em>, <strong><code>vmin</code></strong>=<em><code>None</code></em>, <strong><code>vmax</code></strong>=<em><code>None</code></em>, <strong><code>cmap</code></strong>=<em><code>None</code></em>)</p>
+<h4 id="imsave" class="doc_header"><code>imsave</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1000" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>imsave</code>(<strong><code>a</code></strong>, <strong><code>filename</code></strong>=<em><code>None</code></em>, <strong><code>vmin</code></strong>=<em><code>None</code></em>, <strong><code>vmax</code></strong>=<em><code>None</code></em>, <strong><code>cmap</code></strong>=<em><code>None</code></em>)</p>
 </blockquote>
 <p>imsave(a) converts array a into, and returns a PIL image
 imsave(a, filename) returns the image and also saves it to filename
@@ -134,7 +134,7 @@ imsave(a, ..., cmap=cmap) uses a matplotlib colormap.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="plot_complex_multi" class="doc_header"><code>plot_complex_multi</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1032" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>plot_complex_multi</code>(<strong><code>x</code></strong>, <strong><code>title</code></strong>=<em><code>'_'</code></em>, <strong><code>figsize</code></strong>=<em><code>(10, 10)</code></em>, <strong><code>savePath</code></strong>=<em><code>None</code></em>, <strong><code>scale</code></strong>=<em><code>None</code></em>, <strong><code>show</code></strong>=<em><code>True</code></em>)</p>
+<h4 id="plot_complex_multi" class="doc_header"><code>plot_complex_multi</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1034" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>plot_complex_multi</code>(<strong><code>x</code></strong>, <strong><code>title</code></strong>=<em><code>'_'</code></em>, <strong><code>figsize</code></strong>=<em><code>(10, 10)</code></em>, <strong><code>savePath</code></strong>=<em><code>None</code></em>, <strong><code>scale</code></strong>=<em><code>None</code></em>, <strong><code>show</code></strong>=<em><code>True</code></em>)</p>
 </blockquote>
 
 </div>
@@ -165,7 +165,7 @@ imsave(a, ..., cmap=cmap) uses a matplotlib colormap.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="plot" class="doc_header"><code>plot</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1073" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>plot</code>(<strong><code>img</code></strong>, <strong><code>title</code></strong>=<em><code>'Image'</code></em>, <strong><code>savePath</code></strong>=<em><code>None</code></em>, <strong><code>cmap</code></strong>=<em><code>'inferno'</code></em>, <strong><code>show</code></strong>=<em><code>True</code></em>, <strong><code>vmax</code></strong>=<em><code>None</code></em>, <strong><code>figsize</code></strong>=<em><code>(10, 10)</code></em>, <strong><code>scale</code></strong>=<em><code>None</code></em>)</p>
+<h4 id="plot" class="doc_header"><code>plot</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1075" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>plot</code>(<strong><code>img</code></strong>, <strong><code>title</code></strong>=<em><code>'Image'</code></em>, <strong><code>savePath</code></strong>=<em><code>None</code></em>, <strong><code>cmap</code></strong>=<em><code>'inferno'</code></em>, <strong><code>show</code></strong>=<em><code>True</code></em>, <strong><code>vmax</code></strong>=<em><code>None</code></em>, <strong><code>figsize</code></strong>=<em><code>(10, 10)</code></em>, <strong><code>scale</code></strong>=<em><code>None</code></em>)</p>
 </blockquote>
 
 </div>
@@ -196,7 +196,7 @@ imsave(a, ..., cmap=cmap) uses a matplotlib colormap.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="zplot" class="doc_header"><code>zplot</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1100" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>zplot</code>(<strong><code>imgs</code></strong>, <strong><code>suptitle</code></strong>=<em><code>'Image'</code></em>, <strong><code>savePath</code></strong>=<em><code>None</code></em>, <strong><code>cmap</code></strong>=<em><code>['hot', 'hsv']</code></em>, <strong><code>title</code></strong>=<em><code>['Abs', 'Phase']</code></em>, <strong><code>show</code></strong>=<em><code>True</code></em>, <strong><code>figsize</code></strong>=<em><code>(9, 5)</code></em>, <strong><code>scale</code></strong>=<em><code>None</code></em>)</p>
+<h4 id="zplot" class="doc_header"><code>zplot</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1102" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>zplot</code>(<strong><code>imgs</code></strong>, <strong><code>suptitle</code></strong>=<em><code>'Image'</code></em>, <strong><code>savePath</code></strong>=<em><code>None</code></em>, <strong><code>cmap</code></strong>=<em><code>['hot', 'hsv']</code></em>, <strong><code>title</code></strong>=<em><code>['Abs', 'Phase']</code></em>, <strong><code>show</code></strong>=<em><code>True</code></em>, <strong><code>figsize</code></strong>=<em><code>(9, 5)</code></em>, <strong><code>scale</code></strong>=<em><code>None</code></em>)</p>
 </blockquote>
 
 </div>
@@ -220,7 +220,7 @@ imsave(a, ..., cmap=cmap) uses a matplotlib colormap.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="plotAbsAngle" class="doc_header"><code>plotAbsAngle</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1149" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>plotAbsAngle</code>(<strong><code>img</code></strong>, <strong><code>suptitle</code></strong>=<em><code>'Image'</code></em>, <strong><code>savePath</code></strong>=<em><code>None</code></em>, <strong><code>cmap</code></strong>=<em><code>['gray', 'gray']</code></em>, <strong><code>title</code></strong>=<em><code>['Abs', 'Phase']</code></em>, <strong><code>show</code></strong>=<em><code>True</code></em>, <strong><code>figsize</code></strong>=<em><code>(10, 10)</code></em>, <strong><code>scale</code></strong>=<em><code>None</code></em>)</p>
+<h4 id="plotAbsAngle" class="doc_header"><code>plotAbsAngle</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1151" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>plotAbsAngle</code>(<strong><code>img</code></strong>, <strong><code>suptitle</code></strong>=<em><code>'Image'</code></em>, <strong><code>savePath</code></strong>=<em><code>None</code></em>, <strong><code>cmap</code></strong>=<em><code>['gray', 'gray']</code></em>, <strong><code>title</code></strong>=<em><code>['Abs', 'Phase']</code></em>, <strong><code>show</code></strong>=<em><code>True</code></em>, <strong><code>figsize</code></strong>=<em><code>(10, 10)</code></em>, <strong><code>scale</code></strong>=<em><code>None</code></em>)</p>
 </blockquote>
 
 </div>

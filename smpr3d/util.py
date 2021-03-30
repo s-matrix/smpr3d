@@ -789,23 +789,25 @@ def advanced_raster_scan(ny=10, nx=10, fast_axis=1, mirror=[1, 1], theta=0, dy=1
     return positions.astype(np.float32)
 
 # Cell
-import cupy as cp
+import sigpy as sp
 def get_qx_qy_1D(M, dx, dtype, fft_shifted=False):
-    qxa = cp.fft.fftfreq(M[0], dx[0]).astype(dtype)
-    qya = cp.fft.fftfreq(M[1], dx[1]).astype(dtype)
+    xp = sp.backend.get_array_module(dx)
+    qxa = xp.fft.fftfreq(M[0], dx[0]).astype(dtype)
+    qya = xp.fft.fftfreq(M[1], dx[1]).astype(dtype)
     if fft_shifted:
-        qxa = cp.fft.fftshift(qxa)
-        qya = cp.fft.fftshift(qya)
+        qxa = xp.fft.fftshift(qxa)
+        qya = xp.fft.fftshift(qya)
     return qxa, qya
 
 
 def get_qx_qy_2D(M, dx, dtype, fft_shifted=False):
-    qxa = cp.fft.fftfreq(M[0], dx[0]).astype(dtype)
-    qya = cp.fft.fftfreq(M[1], dx[1]).astype(dtype)
-    [qxn, qyn] = cp.meshgrid(qxa, qya)
+    xp = sp.backend.get_array_module(dx)
+    qxa = xp.fft.fftfreq(M[0], dx[0]).astype(dtype)
+    qya = xp.fft.fftfreq(M[1], dx[1]).astype(dtype)
+    [qxn, qyn] = xp.meshgrid(qxa, qya)
     if fft_shifted:
-        qxn = cp.fft.fftshift(qxn)
-        qyn = cp.fft.fftshift(qyn)
+        qxn = xp.fft.fftshift(qxn)
+        qyn = xp.fft.fftshift(qyn)
     return qxn, qyn
 
 # Cell
@@ -1152,10 +1154,11 @@ def plotAbsAngle(img, suptitle='Image', savePath=None, cmap=['gray', 'gray'], ti
 
 # Cell
 import numpy as np
-from numba import cuda
+import torch as th
+import sigpy as sp
+import numpy as np
 from .torch_imports import *
 import numba.cuda as cuda
-from numba import float32, int8, void, int32, uint32, uint8
 
 @cuda.jit
 def center_of_mass_kernel(comx, comy, indices, counts, frame_dimensions, no_count_indicator, qx, qy):
@@ -1192,19 +1195,20 @@ def sparse_to_dense_datacube_kernel_crop(dc, indices, counts, frame_dimensions, 
 
 # Cell
 def sparse_to_dense_datacube_crop(indices, counts, scan_dimensions, frame_dimensions, center, radius, bin=1):
+    xp = sp.backend.get_array_module(indices)
     radius = int(np.ceil(radius / bin) * bin)
     start = center - radius
     end = center + radius
     frame_size = 2 * radius // bin
 
-    dc = cp.zeros((*scan_dimensions, frame_size, frame_size), dtype=indices.dtype)
+    dc = xp.zeros((*scan_dimensions, frame_size, frame_size), dtype=indices.dtype)
 
     threadsperblock = (16, 16)
     blockspergrid = tuple(np.ceil(np.array(indices.shape[:2]) / threadsperblock).astype(np.int))
 
     no_count_indicator = np.iinfo(indices.dtype).max
 
-    sparse_to_dense_datacube_kernel_crop[blockspergrid, threadsperblock](dc, indices, counts, cp.array(frame_dimensions), bin,
+    sparse_to_dense_datacube_kernel_crop[blockspergrid, threadsperblock](dc, indices, counts, xp.array(frame_dimensions), bin,
                                                                          start, end, no_count_indicator)
     return dc
 
@@ -1361,22 +1365,23 @@ def crop_symmetric_around_center_kernel(new_frames, old_frames, center_frame, ol
 
 # Cell
 def crop_symmetric_around_center(old_frames, old_frame_dimensions, center_data, max_radius):
+    xp = sp.backend.get_array_module(old_frames)
     max_radius_int = int(max_radius)
     frame_size = 2 * max_radius_int
-    center_frame = cp.array([frame_size // 2, frame_size // 2])
+    center_frame = xp.array([frame_size // 2, frame_size // 2])
     new_frame_dimensions = np.array([frame_size,frame_size])
 
     threadsperblock = (16, 16)
     blockspergrid = tuple(np.ceil(np.array(old_frames.shape[:2]) / threadsperblock).astype(np.int))
 
-    new_frames = cp.zeros_like(old_frames)
-    new_frames[:] = cp.iinfo(new_frames.dtype).max
+    new_frames = xp.zeros_like(old_frames)
+    new_frames[:] = xp.iinfo(new_frames.dtype).max
 
     crop_symmetric_around_center_kernel[blockspergrid, threadsperblock](new_frames, old_frames, center_frame,
-                                                                        cp.array(old_frame_dimensions),
-                                                                        cp.array(center_data), max_radius_int)
+                                                                        xp.array(old_frame_dimensions),
+                                                                        xp.array(center_data), max_radius_int)
 
-    max_counts = cp.max(cp.sum(new_frames > 0, 2).ravel())
+    max_counts = xp.max(xp.sum(new_frames > 0, 2).ravel())
     # print(f'max counts: {max_counts}')
     res = new_frames[:,:,:max_counts].get()
     return res, new_frame_dimensions
@@ -1407,8 +1412,7 @@ def rotate_kernel(frames, center_frame, old_frame_dimensions, center_data, no_co
                 frames[ny, nx, i] = mybin * MXnew + mxbin
 
 # Cell
-import cupy as cp
-import numpy as np
+
 def rotate(frames, old_frame_dimensions, center, angle_rad):
     threadsperblock = (16, 16)
     blockspergrid = tuple(np.ceil(np.array(frames.shape[:2]) / threadsperblock).astype(np.int))
@@ -1435,14 +1439,15 @@ def sum_kernel(indices, counts, frame_dimensions, sum, no_count_indicator):
 
 # Cell
 def sum_frames(frames, counts, frame_dimensions):
+    xp = sp.backend.get_array_module(frames)
     threadsperblock = (16, 16)
     blockspergrid = tuple(np.ceil(np.array(frames.shape[:2]) / threadsperblock).astype(np.int))
 
-    sum = cp.zeros(frame_dimensions)
-    no_count_indicator = cp.iinfo(frames.dtype).max
-    frames1 = cp.array(frames)
-    counts1 = cp.array(counts)
-    sum_kernel[blockspergrid, threadsperblock](frames1, counts1, cp.array(frame_dimensions), sum, no_count_indicator)
+    sum = xp.zeros(frame_dimensions)
+    no_count_indicator = xp.iinfo(frames.dtype).max
+    frames1 = xp.array(frames)
+    counts1 = xp.array(counts)
+    sum_kernel[blockspergrid, threadsperblock](frames1, counts1, xp.array(frame_dimensions), sum, no_count_indicator)
     return sum.get()
 
 # Cell
@@ -1474,22 +1479,23 @@ def rebin_kernel(indices, counts, new_frame_center, old_indices, old_counts, old
 # Cell
 from .torch_imports import *
 import numpy as np
-import cupy as cp
 import time
 from numba import cuda
 from math import *
 import math as m
 import cmath as cm
+import sigpy as sp
 
 # Cell
 
 def disk_overlap_function(Qx_all, Qy_all, Kx_all, Ky_all, aberrations, theta_rot, alpha, lam):
     n_batch = Qx_all.shape[0]
-    Gamma = cp.zeros((n_batch,) + (Ky_all.shape[0], Kx_all.shape[0]), dtype=cp.complex64)
+    xp = sp.backend.get_array_module(aberrations)
+    Gamma = xp.zeros((n_batch,) + (Ky_all.shape[0], Kx_all.shape[0]), dtype=xp.complex64)
     gs = Gamma.shape
     threadsperblock = 2 ** 8
     blockspergrid = m.ceil(np.prod(gs) / threadsperblock)
-    strides = cp.array((np.array(Gamma.strides) / (Gamma.nbytes / Gamma.size)).astype(np.int))
+    strides = xp.array((np.array(Gamma.strides) / (Gamma.nbytes / Gamma.size)).astype(np.int))
     disk_overlap_kernel[blockspergrid, threadsperblock](Gamma, strides, Qx_all, Qy_all, Kx_all, Ky_all, aberrations,
                                                         theta_rot, alpha, lam)
     return Gamma
@@ -1604,27 +1610,11 @@ def disk_overlap_kernel(Γ, strides, Qx_all, Qy_all, Kx_all, Ky_all, aberrations
 # Cell
 def double_overlap_intensitities_in_range(G_max, thetas, Qx_max, Qy_max, Kx, Ky, aberrations,
                                           aberration_angles, alpha_rad, lam, do_plot=False):
-    xp = cp.get_array_module(G_max)
+    xp = sp.backend.get_array_module(G_max)
     intensities = np.zeros((len(thetas)))
-#     plotcxmosaic(G_max.get(), 'G_max')
-    # g = G_max.get()
-    # f = np.abs(g) / np.max(np.abs(g))
-    # plotmosaic(np.angle(g) * f, 'G_max')
-    A = xp.zeros(G_max.shape[1:], dtype=xp.complex64)
-    Ap = xp.zeros(G_max.shape[1:], dtype=xp.complex64)
-    Am = xp.zeros(G_max.shape[1:], dtype=xp.complex64)
     for i, theta_rot in enumerate(thetas):
-        start = time.perf_counter()
         if th.cuda.is_available():
             Gamma = disk_overlap_function(Qx_max, Qy_max, Kx, Ky, aberrations, theta_rot, alpha_rad,lam)
-
-        end = time.perf_counter()
-        # print(f"disk_overlap_kernel took {end - start}")
-        # plotmosaic(np.angle(Gamma.get()), f"Gamma")
-
-#         if do_plot and i % 15 == 0:
-            # plotmosaic(np.angle(Gamma.get()), f"Gamma")
-#             plotcxmosaic(Gamma.get() * G_max.get(), f"theta_rot = {np.rad2deg(theta_rot)}")
 
         intensities[i] = xp.sum(xp.abs(G_max * Gamma.conj()))
 
@@ -1653,7 +1643,7 @@ def find_rotation_angle_with_double_disk_overlap(G, lam, k_max, dxy, alpha_rad, 
     :return: the best rotation angle in radians.
     """
     ny, nx, nky, nkx = G.shape
-    xp = cp.get_array_module(G)
+    xp = sp.backend.get_array_module(G)
 
     def get_qx_qy_1D(M, dx, dtype, fft_shifted=False):
         qxa = xp.fft.fftfreq(M[0], dx[0]).astype(dtype)

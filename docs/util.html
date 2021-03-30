@@ -78,7 +78,7 @@ nb_path: "nbs/01_util.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="cartesian_aberrations" class="doc_header"><code>cartesian_aberrations</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1882" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>cartesian_aberrations</code>(<strong><code>qx</code></strong>, <strong><code>qy</code></strong>, <strong><code>lam</code></strong>, <strong><code>C</code></strong>)</p>
+<h4 id="cartesian_aberrations" class="doc_header"><code>cartesian_aberrations</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1872" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>cartesian_aberrations</code>(<strong><code>qx</code></strong>, <strong><code>qy</code></strong>, <strong><code>lam</code></strong>, <strong><code>C</code></strong>)</p>
 </blockquote>
 <p>Zernike polynomials in the cartesian coordinate system
 :param qx:
@@ -531,7 +531,7 @@ out : Param
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7fd4f45c4b20>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7fd4f45c4b20></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7fd4f45c4b20></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="AutoJitCUDAKernel object at 0x7fd925e56a30>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7fd925e56a30></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7fd925e56a30></code>(<strong>*<code>args</code></strong>)</p>
 </blockquote>
 <p>CUDA Kernel object. When called, the kernel object will specialize itself
 for the given arguments (if no suitable specialized version already exists)
@@ -656,7 +656,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7fd4e9f81040>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7fd4e9f81040></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7fd4e9f81040></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="AutoJitCUDAKernel object at 0x7fd924072fa0>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7fd924072fa0></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7fd924072fa0></code>(<strong>*<code>args</code></strong>)</p>
 </blockquote>
 <p>CUDA Kernel object. When called, the kernel object will specialize itself
 for the given arguments (if no suitable specialized version already exists)
@@ -788,7 +788,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="get_qx_qy_2D" class="doc_header"><code>get_qx_qy_2D</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L802" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>get_qx_qy_2D</code>(<strong><code>M</code></strong>, <strong><code>dx</code></strong>, <strong><code>dtype</code></strong>, <strong><code>fft_shifted</code></strong>=<em><code>False</code></em>)</p>
+<h4 id="get_qx_qy_2D" class="doc_header"><code>get_qx_qy_2D</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L803" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>get_qx_qy_2D</code>(<strong><code>M</code></strong>, <strong><code>dx</code></strong>, <strong><code>dtype</code></strong>, <strong><code>fft_shifted</code></strong>=<em><code>False</code></em>)</p>
 </blockquote>
 
 </div>
@@ -819,7 +819,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="scatter_add_patches" class="doc_header"><code>scatter_add_patches</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L816" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>scatter_add_patches</code>(<strong><code>input</code></strong>:<code>Tensor</code>, <strong><code>out</code></strong>:<code>Tensor</code>, <strong><code>axes</code></strong>, <strong><code>positions</code></strong>, <strong><code>patch_size</code></strong>, <strong><code>reduce_dim</code></strong>=<em><code>None</code></em>)</p>
+<h4 id="scatter_add_patches" class="doc_header"><code>scatter_add_patches</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L818" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>scatter_add_patches</code>(<strong><code>input</code></strong>:<code>Tensor</code>, <strong><code>out</code></strong>:<code>Tensor</code>, <strong><code>axes</code></strong>, <strong><code>positions</code></strong>, <strong><code>patch_size</code></strong>, <strong><code>reduce_dim</code></strong>=<em><code>None</code></em>)</p>
 </blockquote>
 <p>Scatter_adds K patches of size :patch_size: at axes [ax1, ax2] into the output tensor. The patches are added at
 positions :positions:. Additionally, several dimensions of the input tensor can be summed, specified by reduce_dims.</p>
@@ -859,7 +859,7 @@ positions :positions:. Additionally, several dimensions of the input tensor can 
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="gather_patches" class="doc_header"><code>gather_patches</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L878" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>gather_patches</code>(<strong><code>input</code></strong>, <strong><code>axes</code></strong>, <strong><code>positions</code></strong>, <strong><code>patch_size</code></strong>, <strong><code>out</code></strong>=<em><code>None</code></em>)</p>
+<h4 id="gather_patches" class="doc_header"><code>gather_patches</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L880" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>gather_patches</code>(<strong><code>input</code></strong>, <strong><code>axes</code></strong>, <strong><code>positions</code></strong>, <strong><code>patch_size</code></strong>, <strong><code>out</code></strong>=<em><code>None</code></em>)</p>
 </blockquote>
 <p>Gathers K patches of size :patch_size: at axes [ax1, ax2] of the input tensor. The patches are collected started at
 K positions pos.</p>

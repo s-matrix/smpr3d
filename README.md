@@ -17,7 +17,7 @@ You can install smpr3d on your own machines with conda (highly recommended). If 
 conda install -c smpr3d -c pytorch -c anaconda smpr3d 
 ```
 
-To install with pip, use: `pip install fastai`. If you install with pip, you should install PyTorch first by following the PyTorch [installation instructions](https://pytorch.org/get-started/locally/).
+To install with pip, use: `pip install smpr3d`. If you install with pip, you should install PyTorch first by following the PyTorch [installation instructions](https://pytorch.org/get-started/locally/).
 
 ## Hackathon - How to use on the nesap cluster 
 

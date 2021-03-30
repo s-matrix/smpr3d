@@ -14,7 +14,7 @@ from skimage.filters import gaussian
 import numpy as np
 import h5py
 #nbdev_comment from __future__ import annotations
-import cupy as cp
+import sigpy as sp
 
 # Cell
 class Metadata4D:
@@ -148,8 +148,9 @@ class Sparse4DData:
             y_min_radius = np.min([center[0], self.frame_dimensions[0] - center[0]])
             x_min_radius = np.min([center[1], self.frame_dimensions[1] - center[1]])
             max_radius = np.min([y_min_radius, x_min_radius])
-        new_frames, new_frame_dimensions = crop_symmetric_around_center(cp.array(self.indices),
-                                                                        cp.array(self.frame_dimensions),
+        xp = sp.backend.get_array_module(self.indices)
+        new_frames, new_frame_dimensions = crop_symmetric_around_center(xp.array(self.indices),
+                                                                        xp.array(self.frame_dimensions),
                                                                         center, max_radius)
         print(f'old frames shape: {self.indices.shape}')
         print(f'new frames shape: {new_frames.shape}')
@@ -165,8 +166,9 @@ class Sparse4DData:
             y_min_radius = np.min([center[0], self.frame_dimensions[0] - center[0]])
             x_min_radius = np.min([center[1], self.frame_dimensions[1] - center[1]])
             max_radius = np.min([y_min_radius, x_min_radius])
-        new_frames, new_frame_dimensions = crop_symmetric_around_center(cp.array(self.indices),
-                                                                        cp.array(self.frame_dimensions),
+        xp = sp.backend.get_array_module(self.indices)
+        new_frames, new_frame_dimensions = crop_symmetric_around_center(xp.array(self.indices),
+                                                                        xp.array(self.frame_dimensions),
                                                                         center, max_radius)
         print(f'old frames shape: {self.indices.shape}')
         print(f'new frames shape: {new_frames.shape}')
@@ -207,10 +209,11 @@ class Sparse4DData:
         c = np.zeros((2,))
         c[:] = (sh[-1] // 2, sh[-2] // 2)
         radius = np.ones((1,)) * sh[-1] // 2
-        inds = cp.array(data.indices[:size, :size].astype(np.uint32))
-        cts = cp.array(data.counts[:size, :size].astype(np.uint32))
+        xp = sp.backend.get_array_module(data.indices)
+        inds = xp.array(data.indices[:size, :size].astype(np.uint32))
+        cts = xp.array(data.counts[:size, :size].astype(np.uint32))
         dc_subset = sparse_to_dense_datacube_crop(inds,cts, (size,size), data.frame_dimensions, c, radius, bin=2)
-        dcs = cp.sum(dc_subset, (0, 1))
+        dcs = xp.sum(dc_subset, (0, 1))
         m1 = dcs.get()
         m = (gaussian(m1.astype(np.float32),2) > m1.max() * 3e-1).astype(np.float)
         r, y0, x0 = get_probe_size(m)
@@ -342,13 +345,14 @@ class Sparse4DData:
         return res
 
     def virtual_annular_image(self, inner_radius, outer_radius, center):
-        img = cp.zeros(tuple(self.scan_dimensions), dtype=np.uint32)
-        no_count_indicator = cp.iinfo(self.indices.dtype).max
+        xp = sp.backend.get_array_module(self.indices)
+        img = xp.zeros(tuple(self.scan_dimensions), dtype=np.uint32)
+        no_count_indicator = xp.iinfo(self.indices.dtype).max
         threadsperblock = (16, 16)
         blockspergrid = tuple(np.ceil(np.array(self.indices.shape[:2]) / threadsperblock).astype(np.int))
-        virtual_annular_image_kernel[blockspergrid, threadsperblock](img, cp.array(self.indices), cp.array(self.counts).astype(np.uint32),
-                                                                     inner_radius, outer_radius, cp.array(center),
-                                                                     cp.array(self.frame_dimensions), no_count_indicator)
+        virtual_annular_image_kernel[blockspergrid, threadsperblock](img, xp.array(self.indices), xp.array(self.counts).astype(np.uint32),
+                                                                     inner_radius, outer_radius, xp.array(center),
+                                                                     xp.array(self.frame_dimensions), no_count_indicator)
         return img.get()
 
     def fluence(self, dr):
