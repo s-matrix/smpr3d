@@ -704,7 +704,7 @@ def advanced_raster_scan(ny=10, nx=10, fast_axis=1, mirror=[1, 1], theta=0, dy=1
 
     dy, dx : float
         Step size (grid spacinf) in *y* and *x*
-
+        2
     Returns
     -------
     pos : ndarray
