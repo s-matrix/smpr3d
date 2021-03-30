@@ -4,7 +4,6 @@ from smatrix2.default_dependencies import fourier_coordinates_2D
 from smatrix2.operators.s_matrix.SMatrixExitWave import SMatrixExitWave
 from smatrix2.util import *
 import os
-from pyms.Probe import wavev
 from timeit import default_timer as time
 
 logFormatter = logging.Formatter("%(asctime)s %(message)s")
@@ -17,8 +16,7 @@ D = 2
 
 dx = np.array([0.2, 0.2])
 E = 300e3
-kz = wavev(E)
-lam = 1 / kz
+lam = wavelength(E)
 C1_target = np.linspace(0, 100, D, dtype=np.float32)
 alpha_rad = 20e-3
 q_aperture = alpha_rad / lam

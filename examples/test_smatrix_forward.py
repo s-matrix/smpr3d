@@ -1,5 +1,4 @@
 from smatrix2.default_dependencies import *
-from pyms.Probe import wavev
 from smatrix2.util import *
 from smatrix2.operators.s_matrix.kernel_wrappers import A_fast_full, smatrix_phase_factorsBDK, smatrix_phase_factorsKB, \
     A_fast_full2, A_fast_full3, A_fast_full4
@@ -13,8 +12,7 @@ N_coherent_simulation = np.array([MY, MX]) * f
 dx_smatrix_simulation = [1.0, 1.0]
 dx_coherent_detector = dx_smatrix_simulation
 E = 300e3
-kz = wavev(E)
-lam = 1 / kz
+lam = wavelength()
 
 C1_target = np.linspace(1000, 2000, D, dtype=np.float32)
 alpha_aperture_rad = 4e-3

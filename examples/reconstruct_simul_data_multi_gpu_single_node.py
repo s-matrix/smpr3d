@@ -1,9 +1,7 @@
-from smatrix2.default_dependencies import fourier_coordinates_2D
-from smatrix2.algorithm.scanning import fasta2
-from smatrix2.operators.linop import FFT2
-from smatrix2.operators.s_matrix.SMatrixExitWave import SMatrixExitWave
-from smatrix2.operators.s_matrix.SMatrixExitWaveAdjointProbe import SMatrixExitWaveAdjointProbe
-from smatrix2.util import *
+from smpr3d.util import *
+from smpr3d.algorithm import *
+from smpr3d.setup import *
+from smpr3d.torch_imports import *
 import os
 
 # salloc -C gpu -N 2 -t 30 -c 10 --gres=gpu:8 -A m1759 --ntasks-per-node=8
