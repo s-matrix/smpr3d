@@ -14,9 +14,8 @@ __all__ = ['fftshift_checkerboard', 'cartesian_aberrations', 'memory_mb', 'memor
            'disk_overlap_kernel', 'double_overlap_intensitities_in_range',
            'find_rotation_angle_with_double_disk_overlap', 'cartesian_aberrations_single', 'cartesian_aberrations',
            'aperture', 'ZernikeProbe2', 'ZernikeProbeSingle', 'ZernikeProbe', 'sdebug', 'h5write', 'h5append', 'h5read',
-           'h5info', 'h5options', 'ZernikeProbe2', 'prox_D_gaussian_kernel', 'prox_D_gaussian',
-           'gradz_poisson_sparse_kernel', 'gradz_poisson_sparse', 'gradz_gaussian_sparse_kernel',
-           'gradz_gaussian_sparse']
+           'h5info', 'h5options', 'prox_D_gaussian_kernel', 'prox_D_gaussian', 'gradz_poisson_sparse_kernel',
+           'gradz_poisson_sparse', 'gradz_gaussian_sparse_kernel', 'gradz_gaussian_sparse']
 
 # Cell
 from numpy.fft import fftfreq
@@ -1721,7 +1720,8 @@ def find_rotation_angle_with_double_disk_overlap(G, lam, k_max, dxy, alpha_rad, 
     return max_ind, thetas, intensities
 
 # Cell
-from .torch_imports import *
+import torch as th
+import torch.nn as nn
 from .util import fftshift_checkerboard, Param
 import numpy as np
 
@@ -2730,34 +2730,7 @@ def h5info(filename, output=None):
 from .torch_imports import *
 from .util import cartesian_aberrations, fftshift_checkerboard
 
-class ZernikeProbe2(nn.Module):
-    def __init__(self, q: th.Tensor, lam, fft_shifted=True):
-        """
-        Creates an aberration surface from aberration coefficients. The output is backpropable
 
-        :param q: 2 x M1 x M2 tensor of x coefficients of reciprocal space
-        :param lam: wavelength in Angstrom
-        :param C: aberration coefficients
-        :return: (maximum size of all aberration tensors) x MY x MX
-        """
-
-        super(ZernikeProbe2, self).__init__()
-        self.q = q
-        self.lam = lam
-        self.fft_shifted = fft_shifted
-
-        if self.fft_shifted:
-            cb = fftshift_checkerboard(self.q.shape[1] // 2, self.q.shape[2] // 2)
-            self.cb = th.from_numpy(cb).float().to(q.device)
-
-    def forward(self, C, A):
-        chi = cartesian_aberrations(self.q[1], self.q[0], self.lam, C)
-        Psi = th.exp(-1j*chi) * A.expand_as(chi)
-
-        if self.fft_shifted:
-            Psi = Psi * self.cb
-
-        return Psi
 
 
 # Cell

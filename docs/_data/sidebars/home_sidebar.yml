@@ -10,6 +10,9 @@ entries:
       title: Overview
       url: /
     - output: web,pdf
+      title: Torch imports
+      url: torch_imports.html
+    - output: web,pdf
       title: Util Main
       url: util.html
     - output: web,pdf

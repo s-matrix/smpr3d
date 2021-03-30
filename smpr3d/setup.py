@@ -22,7 +22,8 @@ def setup_logging(path, log_filename):
 
 import os
 from .util import *
-from .torch_imports import *
+import torch as th
+import torch.distributed as dist
 from numba import cuda
 import GPUtil
 import psutil

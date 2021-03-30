@@ -1,6 +1,7 @@
 {
   "smpr3d": {
     "Overview": "/",
+    "Torch imports": "torch_imports.html",
     "Util Main": "util.html",
     "Utils for plotting": "util_plot.html",
     "Util kernel": "util_kernels.html",

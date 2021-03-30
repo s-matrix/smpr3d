@@ -1,20 +1,10 @@
-from builtins import complex
-
-from smatrix2.default_dependencies import fourier_coordinates_2D
-from smatrix2.algorithm.scanning import admm
-from smatrix2.operators.linop import FFT2
-from smatrix2.operators.s_matrix.SMatrixExitWave import SMatrixExitWave
-from smatrix2.operators.s_matrix.SMatrixExitWaveAdjointProbe import SMatrixExitWaveAdjointProbe
-from smatrix2.util import *
+from smpr3d.util import *
+from smpr3d.algorithm import *
+from smpr3d.setup import *
+from smpr3d.torch_imports import *
 import os
 from timeit import default_timer as time
-
-logFormatter = logging.Formatter("%(asctime)s %(message)s")
-rootLogger = logging.getLogger()
-consoleHandler = logging.StreamHandler(sys.stdout)
-consoleHandler.setFormatter(logFormatter)
-rootLogger.addHandler(consoleHandler)
-rootLogger.setLevel(logging.INFO)
+import numpy as np
 D = 4
 
 dx = np.array([0.2, 0.2])
@@ -120,13 +110,15 @@ S0, depth_init = initial_smatrix(S_shape, tile_number, device, is_unitary=True, 
                                  initial_depth=specimen_thickness_angstrom, lam=lam, q2=q2, dtype=th.float32,
                                  is_pinned=False)
 
-# forward operator for S-matrix
-mode = 'fast'  # or 'low_memory'
-#shape_in, shape_out, device, detector_shape, B, beam_numbers, tile_map, r_min=None, mode='fast'
-A = SMatrixExitWave(S_shape, z_shape, device, detector_shape, B, tile_number, tile_map, mode=mode)
-AH_Psi = SMatrixExitWaveAdjointProbe(A.oshape, Psi_shape, device, detector_shape, B, tile_number, tile_map)
-# adjoint operator for S-matrix
-AH_S = A.H
+from smpr3d.operators import A as A1, AH_S as AH_S1
+r_min = th.zeros(2, device=device)
+
+def A(S, Psi, r):
+    return A1(S, Psi, r, r_min=r_min, out=None, Mx=MX, My=MY)
+
+
+def AH_S(S, Psi, r):
+    return AH_S1(S, Psi, r, r_min=r_min, out=None, tau=th.tensor([1.0]).to(device), Ny=NY, Nx=NX)
 
 start = time()
 S = A(S0, Psi_init1, r0)
@@ -173,9 +165,9 @@ for i, M in enumerate(Ms):
                                      initial_depth=specimen_thickness_angstrom, lam=lam, q2=q2, dtype=th.float32,
                                      is_pinned=False)
 
-    # forward operator for S-matrix
-    mode = 'low_memory'  # or 'low_memory'
-    A = SMatrixExitWave(S_shape, z_shape, device, detector_shape, B, tile_number, tile_map, mode=mode)
+
+    def A(S, Psi, r):
+        return A1(S, Psi, r, r_min=r_min, out=None, Mx=MX, My=MY)
 
     start = time()
     print(f'NY,NX = {S0.shape[1]},{S0.shape[2]} B = {B} B_tile = {B_tile}')
