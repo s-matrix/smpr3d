@@ -403,7 +403,7 @@ class ReconstructionOptions:
 
 # Cell
 from .util import fourier_coordinates_2D
-from .torch_imports import *
+import torch as th
 import numpy as np
 from numpy.fft import fftshift
 
