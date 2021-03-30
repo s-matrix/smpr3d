@@ -2,6 +2,8 @@
 > smpr3d (pronounced 'semper 3D', latin for 'always 3D', short for **S**-**M**atrix **P**hase **R**etrieval & **3D** imaging), simplifies recovering 3D phase-contrast information from scanning diffraction measurements, such as those collected in **4D**-**S**canning **T**ransmission **E**lectron **M**icroscopy (**4D-STEM**) experiments
 
 
+![CI](https://github.com/s-matrix/smpr3d/workflows/CI/badge.svg)
+
 ## Requirements
 
 
@@ -40,6 +42,11 @@ To install with pip, use: `pip install smpr3d`. If you install with pip, you sho
 ## About smpr3d
 
 
+## Acknowledgements
+
+We thank Hamish Brown
+
+## References
 
 ## How to contribute
 `nbdev_build_lib && nbdev_clean_nbs && nbdev_build_docs`
