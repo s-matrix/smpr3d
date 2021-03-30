@@ -1,6 +1,6 @@
 ---
 
-title: smpr3d 
+title: Welcome to smpr3d 
 
 
 keywords: fastai
@@ -37,34 +37,39 @@ nb_path: "nbs/index.ipynb"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Install">Install<a class="anchor-link" href="#Install"> </a></h2>
+<h2 id="Installing">Installing<a class="anchor-link" href="#Installing"> </a></h2>
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p><code>pip install smpr3d</code></p>
+<p>TODO - check this works</p>
+<p>You can use smpr3d without any installation by using <a href="https://colab.research.google.com/">Google Colab</a>. In fact, every page of this documentation is also available as an interactive notebook - click "Open in colab" at the top of any page to open it (be sure to change the Colab runtime to "GPU" to have it run fast!) See the fast.ai documentation on <a href="https://course.fast.ai/start_colab">Using Colab</a> for more information.</p>
+<p>You can install smpr3d on your own machines with conda (highly recommended). If you're using <a href="https://www.anaconda.com/products/individual">Anaconda</a> then run:</p>
+<div class="highlight"><pre><span></span>conda install -c smpr3d -c pytorch -c anaconda smpr3d
+</pre></div>
+<p>To install with pip, use: <code>pip install fastai</code>. If you install with pip, you should install PyTorch first by following the PyTorch <a href="https://pytorch.org/get-started/locally/">installation instructions</a>.</p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Hackathon---How-to-use-on-the-nesap-cluster">Hackathon - How to use on the nesap cluster<a class="anchor-link" href="#Hackathon---How-to-use-on-the-nesap-cluster"> </a></h2><p><code>git clone git@github.com:s-matrix/smpr3d.git</code>
-<code>module purge</code>
-<code>module load cgpu</code>
-<code>module load pytorch/1.8.0-gpu</code>
-<code>cd smpr3d</code>
-<code>python setup.py develop --user</code>
-<code>cd examples</code>
-<code>sbatch slurm.sh</code></p>
+<h2 id="Hackathon---How-to-use-on-the-nesap-cluster">Hackathon - How to use on the nesap cluster<a class="anchor-link" href="#Hackathon---How-to-use-on-the-nesap-cluster"> </a></h2><p><code>git clone git@github.com:s-matrix/smpr3d.git</code></p>
+<p><code>module purge</code></p>
+<p><code>module load cgpu</code></p>
+<p><code>module load pytorch/1.8.0-gpu</code></p>
+<p><code>cd smpr3d</code></p>
+<p><code>python setup.py develop --user</code></p>
+<p><code>cd examples</code></p>
+<p><code>sbatch slurm.sh</code></p>
 
 </div>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="How-to-contribute">How to contribute<a class="anchor-link" href="#How-to-contribute"> </a></h2><p><code>nbdev_build_lib &amp;&amp; nbdev_clean_nbs &amp;&amp; nbdev_build_docs</code></p>
+<h2 id="About-smpr3d">About smpr3d<a class="anchor-link" href="#About-smpr3d"> </a></h2><h2 id="How-to-contribute">How to contribute<a class="anchor-link" href="#How-to-contribute"> </a></h2><p><code>nbdev_build_lib &amp;&amp; nbdev_clean_nbs &amp;&amp; nbdev_build_docs</code></p>
 
 </div>
 </div>
