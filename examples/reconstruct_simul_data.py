@@ -1,7 +1,7 @@
 from smpr3d.util import *
 from smpr3d.algorithm import *
 from smpr3d.setup import *
-from smpr3d.torch_imports import *
+import torch as th
 import os
 import numpy as np
 
