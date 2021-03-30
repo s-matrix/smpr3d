@@ -27,7 +27,7 @@ def A(S, Psi, r, r_min, out=None, Mx=0, My=0):
         out[:] = 0
     D, K, MY, MX, _ = out.shape
     gpu = cuda.get_current_device()
-    threadsperblock = gpu.MAX_THREADS_PER_BLOCK
+    threadsperblock = 128#gpu.MAX_THREADS_PER_BLOCK
     blockspergrid = m.ceil(np.prod(np.array((B, MX, MY))) / threadsperblock)
     smatrix_forward_kernel[blockspergrid, threadsperblock, th.cuda.current_stream().cuda_stream]\
         (th.view_as_real(S), Psi.phase_factors, r, r_min, out)
@@ -64,7 +64,7 @@ def AH_S(z, Psi, r, r_min, out=None, tau = th.tensor([1.0]), Ny=-1, Nx=-1):
 
     gpu = cuda.get_current_device()
     stream = th.cuda.current_stream().cuda_stream
-    threadsperblock = gpu.MAX_THREADS_PER_BLOCK
+    threadsperblock = 128#gpu.MAX_THREADS_PER_BLOCK
     blockspergrid = m.ceil(np.prod(np.array((B, MY, MX))) / threadsperblock)
     smatrix_backward_kernel_S[blockspergrid, threadsperblock, stream] \
         (th.view_as_real(z), Psi.phase_factors, mean_probe_intensities, r, r_min, out, tau)
@@ -101,7 +101,7 @@ def smatrix_phase_factorsBDK(Psi, r, take_beams, q, B, out=None):
 
     gpu = cuda.get_current_device()
     stream = th.cuda.current_stream().cuda_stream
-    threadsperblock = gpu.MAX_THREADS_PER_BLOCK
+    threadsperblock = 128#gpu.MAX_THREADS_PER_BLOCK
     blockspergrid = m.ceil(np.prod(np.array(out.shape[:-1])) / threadsperblock)
     tb = take_beams[None, ...].expand(*Psi.shape)
     Psi_DB = Psi[tb].reshape(D, B)
@@ -138,7 +138,7 @@ def smatrix_phase_factorsKB(Psi, r, take_beams, q, q_indices, B, out=None):
 
     gpu = cuda.get_current_device()
     stream = th.cuda.current_stream().cuda_stream
-    threadsperblock = gpu.MAX_THREADS_PER_BLOCK
+    threadsperblock = 128#gpu.MAX_THREADS_PER_BLOCK
     blockspergrid = m.ceil(np.prod(np.array(out.shape[:-1])) / threadsperblock)
     tb = take_beams[..., None].expand(*Psi.shape)
     Psi_B = Psi[tb].reshape(B, 2)
