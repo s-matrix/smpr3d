@@ -1,18 +1,23 @@
-from smatrix2.default_dependencies import *
-from smatrix2.util import *
-from smatrix2.operators.s_matrix.kernel_wrappers import A_fast_full, smatrix_phase_factorsBDK, smatrix_phase_factorsKB, \
-    A_fast_full2, A_fast_full3, A_fast_full4
+from smpr3d.util import *
+from smpr3d.setup import *
+from smpr3d.operators import *
+from numpy.fft import fftfreq, fftshift
+import numpy as np
+import torch as th
+
+#f4dstem
+
 from timeit import default_timer as time
 
 D = 1
-K = 64
-MY = MX = 64
+K = 128
+MY = MX = 96
 f = np.array([2, 2])
 N_coherent_simulation = np.array([MY, MX]) * f
 dx_smatrix_simulation = [1.0, 1.0]
 dx_coherent_detector = dx_smatrix_simulation
 E = 300e3
-lam = wavelength()
+lam = wavelength(E)
 
 C1_target = np.linspace(1000, 2000, D, dtype=np.float32)
 alpha_aperture_rad = 4e-3
@@ -68,38 +73,62 @@ tile_map = th.arange(B).long().to(dev)
 out = th.zeros((B, D, K, 2)).to(dev)
 out2 = th.zeros((K, B, 2)).to(dev)
 # (Psi, r, take_beams, q, q_indices, B, out=None)
-phase_factors = smatrix_phase_factorsBDK(Psi, r, take_beams, q1, q_indices1, B, out)
+phase_factors = smatrix_phase_factorsBDK(Psi, r, take_beams, q1, B, out)
 phase_factors2 = smatrix_phase_factorsKB(Psi[0], r[0], take_beams, q1, q_indices1, B, out2)
+phase_factors2 = th.view_as_complex(phase_factors2)
+Psi.phase_factors = phase_factors
 
-S = th.ones((B, *N_coherent_simulation, 2)).to(dev)
+S = th.ones((B, *N_coherent_simulation), dtype=th.complex64).to(dev)
 for b in range(B):
     cur_beam = beam_numbers_coherent_simulation == b
-    cur_planewave = make_real(cur_beam)
-    S[b] = th.ifft(cur_planewave, 2, True)
+    cur_planewave = cur_beam
+    S[b] = th.fft.ifft2(cur_planewave, norm='ortho')
 # %%
 out = th.zeros((D, K, MY, MX, 2)).to(dev)
 # S, phase_factors, r, r_min, out=None, Mx=0, My=0
 r_min = th.tensor([0, 0]).to(dev)
 
+from smpr3d.operators import A as A1, AH_S as AH_S1
+
+r_min = th.zeros(2, device=dev)
+
 for i in range(3):
     start1 = time()
-    exitw = A_fast_full(S, phase_factors, r, r_min, out, Mx=MX, My=MY)
+    exitw = A1(S, Psi, r, r_min, out, Mx=MX, My=MY)
     th.cuda.synchronize(dev)
     end1 = time()
 
+th.backends.cuda.matmul.allow_tf32 = True
 for i in range(3):
-    exitw2 = A_fast_full2(S, phase_factors2, r[0], r_min, MY, MX)
+    exitw2 = A_fast_full2(S, th.view_as_real(phase_factors2), r[0], r_min, MY, MX)
     start2 = time()
-    exitw2 = A_fast_full2(S, phase_factors2, r[0], r_min, MY, MX)
+    exitw2 = A_fast_full2(S, th.view_as_real(phase_factors2), r[0], r_min, MY, MX)
     th.cuda.synchronize(dev)
     end2 = time()
 
+th.backends.cuda.matmul.allow_tf32 = False
+for i in range(3):
+    exitw2 = A_fast_full2(S, th.view_as_real(phase_factors2), r[0], r_min, MY, MX)
+    start6 = time()
+    exitw2 = A_fast_full2(S, th.view_as_real(phase_factors2), r[0], r_min, MY, MX)
+    th.cuda.synchronize(dev)
+    end6 = time()
+
+th.backends.cuda.matmul.allow_tf32 = False
 for i in range(3):
     exitw3 = A_fast_full3(S, phase_factors2, r[0], r_min, MY, MX)
     start3 = time()
     exitw3 = A_fast_full3(S, phase_factors2, r[0], r_min, MY, MX)
     th.cuda.synchronize(dev)
     end3 = time()
+
+th.backends.cuda.matmul.allow_tf32 = True
+for i in range(3):
+    exitw3 = A_fast_full3(S, phase_factors2, r[0], r_min, MY, MX)
+    start5 = time()
+    exitw3 = A_fast_full3(S, phase_factors2, r[0], r_min, MY, MX)
+    th.cuda.synchronize(dev)
+    end5 = time()
 
 for i in range(3):
     out2 = th.zeros((D, K, MY, MX, 2)).to(dev)
@@ -109,14 +138,16 @@ for i in range(3):
     th.cuda.synchronize(dev)
     end4 = time()
 
-print(f'A_fast_full (custom kernel)           {end1 - start1}')
-print(f'A_fast_full4 (custom kernel 2)           {end4 - start4}')
-print(f'A_fast_full2 (real batched matmul)    {end2 - start2}')
-print(f'A_fast_full3 (complex batched matmul) {end3 - start3}')
+print(f'A_fast_full (custom kernel)                            {end1 - start1}')
+print(f'A_fast_full4 (custom kernel 2)                         {end4 - start4}')
+print(f'A_fast_full2 (real batched matmul)   NO Tensorfloat32  {end2 - start2}')
+print(f'A_fast_full3 (complex batched matmul    Tensorfloat32) {end6 - start6}')
+print(f'A_fast_full3 (complex batched matmul NO Tensorfloat32) {end3 - start3}')
+print(f'A_fast_full3 (complex batched matmul    Tensorfloat32) {end5 - start5}')
 cb = fftshift_checkerboard(MX // 2, MY // 2)
 # %%
 i = 0
-rexitw = th.ifft(exitw[:, i], 2, True)
+rexitw = th.fft.ifft2(exitw[:, i], norm='ortho')
 # rexitw2 = th.ifft(exitw2, 2, True)
 #%%
 

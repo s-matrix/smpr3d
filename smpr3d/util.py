@@ -2082,7 +2082,7 @@ class ZernikeProbe(nn.Module):
                       self.C32b.expand(max_size), self.C34a.expand(max_size), self.C34b.expand(max_size)), 0)
 
         chi = cartesian_aberrations(self.qx, self.qy, self.lam, C).type(self.dtype)
-        Psi = th.exp(-1j*chi) * A.expand_as(chi)
+        Psi = th.exp(-1j*chi) * self.A.expand_as(chi)
 
         if self.fft_shifted:
             Psi = Psi * self.cb

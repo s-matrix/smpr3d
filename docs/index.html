@@ -1,13 +1,13 @@
 ---
 
-title: Welcome to smpr3d 
+title: Welcome to $\mathcal{S}$mpr3D 
 
 
 keywords: fastai
 sidebar: home_sidebar
 
-summary: "smpr3d (pronounced 'semper 3D', latin for 'always 3D', short for **S**-**M**atrix **P**hase **R**etrieval & **3D** imaging), simplifies recovering 3D phase-contrast information from scanning diffraction measurements, such as those collected in **4D**-**S**canning **T**ransmission **E**lectron **M**icroscopy (**4D-STEM**) experiments"
-description: "smpr3d (pronounced 'semper 3D', latin for 'always 3D', short for **S**-**M**atrix **P**hase **R**etrieval & **3D** imaging), simplifies recovering 3D phase-contrast information from scanning diffraction measurements, such as those collected in **4D**-**S**canning **T**ransmission **E**lectron **M**icroscopy (**4D-STEM**) experiments"
+summary: "$\mathcal{S}$mpr3d (pronounced 'semper 3D', latin for 'always 3D', short for **$\mathcal{S}$**-**M**atrix **P**hase **R**etrieval & **3D** imaging) simplifies recovering 3D phase-contrast information from scanning diffraction measurements, such as those collected in **4D**-**S**canning **T**ransmission **E**lectron **M**icroscopy (**4D-STEM**) experiments"
+description: "$\mathcal{S}$mpr3d (pronounced 'semper 3D', latin for 'always 3D', short for **$\mathcal{S}$**-**M**atrix **P**hase **R**etrieval & **3D** imaging) simplifies recovering 3D phase-contrast information from scanning diffraction measurements, such as those collected in **4D**-**S**canning **T**ransmission **E**lectron **M**icroscopy (**4D-STEM**) experiments"
 nb_path: "nbs/index.ipynb"
 ---
 <!--
@@ -38,12 +38,6 @@ nb_path: "nbs/index.ipynb"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Requirements">Requirements<a class="anchor-link" href="#Requirements"> </a></h2>
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="Installing">Installing<a class="anchor-link" href="#Installing"> </a></h2>
 </div>
 </div>
@@ -51,8 +45,8 @@ nb_path: "nbs/index.ipynb"
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>TODO - check this works</p>
-<p>You can use smpr3d without any installation by using <a href="https://colab.research.google.com/">Google Colab</a>. In fact, every page of this documentation is also available as an interactive notebook - click "Open in colab" at the top of any page to open it (be sure to change the Colab runtime to "GPU" to have it run fast!) See the fast.ai documentation on <a href="https://course.fast.ai/start_colab">Using Colab</a> for more information.</p>
-<p>You can install smpr3d on your own machines with conda (highly recommended). If you're using <a href="https://www.anaconda.com/products/individual">Anaconda</a> then run:</p>
+<p>You can use $\mathcal{S}$mpr3d without any installation by using <a href="https://colab.research.google.com/">Google Colab</a>. In fact, every page of this documentation is also available as an interactive notebook - click "Open in colab" at the top of any page to open it (be sure to change the Colab runtime to "GPU" to have it run fast!) See the fast.ai documentation on <a href="https://course.fast.ai/start_colab">Using Colab</a> for more information.</p>
+<p>You can install $\mathcal{S}$mpr3d on your own machines with conda (highly recommended). If you're using <a href="https://www.anaconda.com/products/individual">Anaconda</a> then run:</p>
 <div class="highlight"><pre><span></span>conda install -c smpr3d -c pytorch -c anaconda smpr3d
 </pre></div>
 <p>To install with pip, use: <code>pip install smpr3d</code>. If you install with pip, you should install PyTorch first by following the PyTorch <a href="https://pytorch.org/get-started/locally/">installation instructions</a>.</p>
@@ -76,8 +70,16 @@ nb_path: "nbs/index.ipynb"
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="About-smpr3d">About smpr3d<a class="anchor-link" href="#About-smpr3d"> </a></h2><h2 id="Acknowledgements">Acknowledgements<a class="anchor-link" href="#Acknowledgements"> </a></h2><p>We thank Hamish Brown</p>
-<h2 id="References">References<a class="anchor-link" href="#References"> </a></h2><h2 id="How-to-contribute">How to contribute<a class="anchor-link" href="#How-to-contribute"> </a></h2><p><code>nbdev_build_lib &amp;&amp; nbdev_clean_nbs &amp;&amp; nbdev_build_docs</code></p>
+<h2 id="About-$\mathcal{S}$mpr3d">About $\mathcal{S}$mpr3d<a class="anchor-link" href="#About-$\mathcal{S}$mpr3d"> </a></h2><p>A fabulous idea</p>
+<h2 id="Acknowledgements">Acknowledgements<a class="anchor-link" href="#Acknowledgements"> </a></h2><p><a href="https://github.com/HamishGBrown">Hamish Brown (former NCEM)</a> - theory, code dev and first demonstrations</p>
+<p><a href="https://github.com/cophus">Colin Ophus (NCEM)</a> - theory, code dev and first demonstrations</p>
+<p><a href="https://github.com/PierreCarrier">Pierre Carrier (HPEnterprise)</a> - performance profiling</p>
+<p><a href="https://github.com/dmargala">Daniel Margala (NERSC)</a> - performance profiling</p>
+<h2 id="References">References<a class="anchor-link" href="#References"> </a></h2><p>Pelz, P. M. et al. Reconstructing the Scattering Matrix from Scanning Electron Diffraction Measurements Alone. (2020)., <code>doi &lt;https://arxiv.org/abs/2008.12768v1&gt;</code></p>
+<p>Brown, H. G. et al. A three-dimensional reconstruction algorithm for scanning transmission electron microscopy data from thick samples. <code>doi &lt;http://arxiv.org/abs/2011.07652&gt;</code></p>
+<h2 id="How-to-contribute">How to contribute<a class="anchor-link" href="#How-to-contribute"> </a></h2><p>Before committing, run</p>
+<p><code>nbdev_build_lib &amp;&amp; nbdev_clean_nbs &amp;&amp; nbdev_build_docs</code></p>
+<p>to compile the notebook into script files, clean the notebooks, and build the documentation.</p>
 
 </div>
 </div>
