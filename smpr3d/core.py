@@ -204,7 +204,7 @@ class Sparse4DData:
         return res
 
     @staticmethod
-    def _determine_center_and_radius(data : Sparse4DData, manual=False, size=25):
+    def _determine_center_and_radius(data : Sparse4DData, manual=False, size=25, threshold=3e-1):
         sh = np.concatenate([data.scan_dimensions,data.frame_dimensions])
         c = np.zeros((2,))
         c[:] = (sh[-1] // 2, sh[-2] // 2)
@@ -215,7 +215,7 @@ class Sparse4DData:
         dc_subset = sparse_to_dense_datacube_crop(inds,cts, (size,size), data.frame_dimensions, c, radius, bin=2)
         dcs = xp.sum(dc_subset, (0, 1))
         m1 = dcs.get()
-        m = (gaussian(m1.astype(np.float32),2) > m1.max() * 3e-1).astype(np.float)
+        m = (gaussian(m1.astype(np.float32),2) > m1.max() * threshold).astype(np.float)
         r, y0, x0 = get_probe_size(m)
         return 2 * np.array([y0,x0]), r*2
 
