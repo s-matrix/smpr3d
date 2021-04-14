@@ -42,15 +42,21 @@ A fabulous idea
 
 ## Acknowledgements
 
-[Hamish Brown (former NCEM)](https://github.com/HamishGBrown) - theory, code dev and first demonstrations
+[Hamish Brown (former NCEM)](https://github.com/HamishGBrown) - theory and first demonstrations
 
-[Colin Ophus (NCEM)](https://github.com/cophus) - theory, code dev and first demonstrations
+[Colin Ophus (NCEM)](https://github.com/cophus) - theory and first demonstrations
 
 [Alex Rakowski (NCEM)](https://github.com/alex-rakowski) - hpc
 
+[Jim Ciston (NCEM)](https://foundry.lbl.gov/about/staff/jim-ciston/) - first demonstrations
+
+[Mary Scott (NCEM)](https://github.com/orgs/ScottLabUCB/) - first demonstrations
+
+[Scott Findlay (Monash)](https://research.monash.edu/en/persons/scott-findlay) - theory
+
 [Pierre Carrier (HPEnterprise)](https://github.com/PierreCarrier) - performance profiling 
 
-[Daniel Margala (NERSC)](https://github.com/dmargala) - performance profiling 
+[Daniel Margala (NERSC)](https://github.com/dmargala) - performance profiling
 
 ## References
 
