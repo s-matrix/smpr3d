@@ -1,8 +1,9 @@
 from smpr3d.util import *
 from smpr3d.algorithm import *
 from smpr3d.setup import *
-from smpr3d.torch_imports import *
+import torch as th
 import os
+import numpy as np
 
 # salloc -C gpu -N 2 -t 30 -c 10 --gres=gpu:8 -A m1759 --ntasks-per-node=8
 # srun -N 2 python ./admm_smatrix_dist_pytorch.py
@@ -22,7 +23,7 @@ args.io.summary_log_dir = args.io.path + 'log/'
 args.io.logname = 'atoms_aberrations104'
 args.io.filename_data = 'atoms_aberrations104.h5'
 
-summary = setup_logging(args.io.path, args.io.logname, args.io.summary_log_dir)
+summary = setup_logging(args.io.path, args.io.logname)
 
 args.dist_backend = 'mpi'  # 'mpi'
 args.dist_init_method = f'file://{args.io.path}sharedfile'
@@ -34,25 +35,22 @@ args.use_full_smatrix = True
 args.uniform_initial_intensity = False
 
 dC1 = 30
-#%%
-i = 1
-# for i in range(1):
-    # %% load data
-args.io.filename_results = f'random4_dC{dC1}perc_res_{i+5:03d}.h5'
+# %% load data
+i = 0
+args.io.filename_results = f'random4_dC{dC1}perc_res_{i + 5:03d}.h5'
 world_size = args.node_config.world_size
 rank = args.node_config.rank
 device = args.node_config.device
 
 lam, alpha_rad, C, dx, specimen_thickness_angstrom, vacuum_probe, D, K, K_rank, MY, MX, NY, NX, \
 fy, fx, detector_shape, r, I_target, y_max, x_max, y_min, x_min, S_sol, Psi_sol, r_sol = load_smatrix_data_list2(
-    args.io.path + args.io.filename_data, device, rank, world_size, subset=[0])
+    args.io.path + args.io.filename_data, device, rank, world_size, subset=[0, 1, 2, 3])
+# dx = 1/2/dx
+lam *= 1e10
 ss = S_sol.shape
 S_sol1 = th.zeros((ss[0],ss[1]+2,ss[2]+2,ss[3])).to(S_sol.device)
 S_sol1[:,:-2,:-2] = S_sol
 S_sol = S_sol1
-
-# dx = 1/2/dx
-lam *= 1e10
 # %% define data-dependent variables
 # Fourier space grid on detector
 
@@ -61,7 +59,7 @@ q = th.as_tensor(qnp, device=device)
 q2 = th.as_tensor(np.linalg.norm(qnp, axis=0) ** 2, device=device)
 
 # initial aperture amplitude
-A_init = initial_probe_amplitude(vacuum_probe, I_target, world_size, rank, summary)
+A_init = initial_probe_amplitude(vacuum_probe, I_target, world_size, rank)
 
 # mask which beams to include in the S-matrix input channels
 take_beams = vacuum_probe > args.beam_threshold_percent
@@ -70,47 +68,41 @@ B, B_tile, tile_order, beam_numbers, tile_map = prepare_beam_parameters(take_bea
                                                                         alpha_rad * 1.1, lam, args.max_phase_error,
                                                                         args.use_full_smatrix, device)
 # shape of reconstruction variables
-S_shape = (B_tile, NY, NX, 2)
-Psi_shape = (D, MY, MX, 2)
-z_shape = tuple(I_target.shape + (2,))
+S_shape = (B_tile, NY, NX)
+Psi_shape = (D, MY, MX)
+z_shape = tuple(I_target.shape)
 
 # map of convergence angles
 alpha = q.norm(dim=0) * lam
 beam_alphas = th.zeros_like(take_beams, dtype=th.float32, device=device) * -1
 beam_alphas[take_beams] = alpha[take_beams]
 alpha_map = beam_alphas[take_beams]
-# %%
-plot(tile_order.cpu())
-bn = beam_numbers.cpu().numpy()
-plot(bn)
 
 # %%
 print(specimen_thickness_angstrom)
 S0, depth_init = initial_smatrix(S_shape, beam_numbers, device, is_unitary=True, include_plane_waves=B == B_tile,
-                                 initial_depth=specimen_thickness_angstrom, lam=lam, q2=q2, dtype=th.float32,
+                                 initial_depth=specimen_thickness_angstrom, lam=lam, q2=q2,
                                  is_pinned=False)
-
-plotcx(complex_numpy(depth_init.cpu()))
 
 tile_numbers = beam_numbers[beam_numbers >= 0]
 beam_numbers = th.ones_like(take_beams).cpu().long() * -1
 beam_numbers[take_beams] = th.arange(B)
 # %% define S-matrix forward and adjoint operators
-# forward operator for S-matrix
-mode = 'fast'  # or 'low_memory'
-A = SMatrixExitWave(S_shape, z_shape, device, detector_shape, B, beam_numbers, tile_map, mode=mode)
-# adjoint operator for S-matrix
-AH_S = A.H
+from smpr3d.operators import A as A1, AH_S as AH_S1
 
-# adjoint operator for probe shape_in, shape_out, device, detector_shape, B, beam_numbers, tile_map, r_min=None, mode='fast'
-AH_Psi = SMatrixExitWaveAdjointProbe(A.oshape, Psi_shape, device, detector_shape, B, beam_numbers, tile_map)
-# TODO: adjoint operator for positions
+r_min = th.zeros(2, device=device)
+
+
+def A(S, Psi, r):
+    return A1(S, Psi, r, r_min=r_min, out=None, Mx=MX, My=MY)
+
+
+def AH_S(S, Psi, r):
+    return AH_S1(S, Psi, r, r_min=r_min, out=None, tau=th.tensor([1.0]).to(device), Ny=NY, Nx=NX)
+
+
+AH_Psi = None
 AH_r = None
-
-# Fourier transform
-F = FFT2(A.oshape)
-# inverse/adjoint Fourier transform
-FH = F.H
 
 a = th.sqrt(I_target)
 
@@ -119,7 +111,7 @@ report_smatrix_parameters(rank, world_size, a, S0, B, D, K, MY, MX, NY, NX, fy, 
 
 if world_size == 1:
     plot(take_beams.cpu().float().numpy(), 'take_beams')
-    plot(fftshift(beam_numbers.cpu().float().numpy()), 'aperture_tiling', cmap='gist_ncar')
+    plot(np.fft.fftshift(beam_numbers.cpu().float().numpy()), 'aperture_tiling', cmap='gist_ncar')
 # else:
 #     dist.barrier()
 # %% define initial probes
@@ -142,30 +134,31 @@ q2 = th.as_tensor(np.linalg.norm(qnp, axis=0) ** 2, device=device)
 Ap0 = vacuum_probe
 # del I_target
 # mask which beams to include in the S-matrix input channels
-take_beams = vacuum_probe > args.beam_threshold_percent / 100
+# take_beams = vacuum_probe > args.beam_threshold_percent / 100
 
 Psi_gen = ZernikeProbe2(q, lam, fft_shifted=True)
 Psi_target = Psi_gen(C_target, Ap0).detach()
 Psi_model = Psi_gen(C_model, Ap0).detach()
-psi_model = th.ifft(Psi_model, 2, True)
+psi_model = th.fft.ifft2(Psi_model, norm='ortho')
 cb = fftshift_checkerboard(MY // 2, MX // 2)
 
-fpr1 = complex_numpy(Psi_target[0].cpu())
+fpr1 = Psi_target[0].cpu().numpy()
 pr1 = np.fft.ifft2(fpr1, norm='ortho')
 
-fpr2 = complex_numpy(Psi_model[0].cpu())
+fpr2 = Psi_model[0].cpu().numpy()
 pr2 = np.fft.ifft2(fpr2, norm='ortho')
 
-# plotcx(np.hstack([fpr1, fpr2]), 'fpr')
-# plotcx(np.hstack([pr1, pr2]), 'pr')
+from smpr3d.core import SMeta
 
+s_meta = SMeta(take_beams, dx, S_shape, MY, MX, device)
+print(s_meta.q_dft)
 # report_initial_probes(summary, rank, world_size, Psi_model, psi_model, C_model, specimen_thickness_angstrom, q, lam,
 #                       alpha_rad)
 # %% perform reconstruction
 # m = [MY, MX]
 # plotAbsAngle(complex_numpy(S_sol[0, m[0]:-m[0], m[1]:-m[1]].cpu()), f'S_sol[{0}]')
 args.reconstruction_opts = Param()
-args.reconstruction_opts.max_iters = 4
+args.reconstruction_opts.max_iters = 100
 args.reconstruction_opts.beta = 1.0
 args.reconstruction_opts.tau_S = 1e-4
 args.reconstruction_opts.tau_Psi = 1e6
@@ -176,10 +169,9 @@ args.reconstruction_opts.verbose = 2
 
 r0 = r
 Psi0 = Psi_sol
-(S_n, Psi_n, C_n, r_n), outs, opts = fasta2(A, AH_S, AH_Psi, AH_r, F, FH, prox_D_gaussian, Psi_gen, a, S0, Psi0, C_model,
-                                       Ap0, r0, args.reconstruction_opts, S_sol=S_sol, Psi_sol=Psi_sol, r_sol=r_sol,
-                                       summary=summary)
-
+(S_n, Psi_n, C_n, r_n), outs, opts = fasta2(s_meta, A, AH_S, AH_Psi, AH_r, prox_D_gaussian, Psi_gen, a, S0, Psi0,
+                                            C_model, Ap0, r0, args.reconstruction_opts, S_sol=S_sol, Psi_sol=Psi_sol,
+                                            r_sol=r_sol, summary=summary)
 
 # save_results(rank, S_n, Psi_n, C_n, r_n, outs, S_sol, Psi_sol, r_sol, beam_numbers, tile_map, alpha_map, A.coords, A.inds,
 #              take_beams, lam, alpha_rad, dx, specimen_thickness_angstrom, args.io.path + args.io.filename_results)
