@@ -2,16 +2,19 @@
 > Smpr3d (pronounced 'semper 3D', latin for 'always 3D', short for **S**-**M**atrix **P**hase **R**etrieval & **3D** imaging) simplifies recovering 3D phase-contrast information from scanning diffraction measurements, such as those collected in **4D**-**S**canning **T**ransmission **E**lectron **M**icroscopy (**4D-STEM**) experiments
 
 
+🚨 **Smpr3D is a research project at an early stage of
+development. Expect monstrous bugs and razor-sharp edges!**
+
 ![CI](https://github.com/s-matrix/smpr3d/workflows/CI/badge.svg)
 
 ## Installing
 
 
-TODO - check this works
+**TODO** - this project is not on pip or conda yet - install with `python setup.py develop --user`
 
-You can use Smpr3d without any installation by using [Google Colab](https://colab.research.google.com/). In fact, every page of this documentation is also available as an interactive notebook - click "Open in colab" at the top of any page to open it (be sure to change the Colab runtime to "GPU" to have it run fast!) See the fast.ai documentation on [Using Colab](https://course.fast.ai/start_colab) for more information.
+You can use Smpr3d without any installation by using [Google Colab](https://colab.research.google.com/). In fact, every page of this documentation is also available as an interactive notebook - click "Open in colab" at the top of any page to open it (be sure to change the Colab runtime to "GPU"!).
 
-You can install Smpr3d on your own machines with conda (highly recommended). If you're using [Anaconda](https://www.anaconda.com/products/individual) then run:
+You can install Smpr3d on your own machines with conda (highly recommended - not working yet :)). If you're using [Anaconda](https://www.anaconda.com/products/individual) then run:
 ```bash
 conda install -c smpr3d -c pytorch -c anaconda smpr3d 
 ```
