@@ -6,9 +6,9 @@
 #SBATCH -N 1
 #SBATCH -t 5
 #SBATCH -c 10
-#SBATCH --gres=gpu:4
+#SBATCH --gres=gpu:1
 #SBATCH -A m1759
-#SBATCH --ntasks-per-node=4
+#SBATCH --ntasks-per-node=1
 #SBATCH -q special
 #SBATCH --output=serial_test2.log
 pwd; hostname; date
