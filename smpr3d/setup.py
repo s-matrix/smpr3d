@@ -58,13 +58,13 @@ def configure_node(dist_backend, init_method):
         args.scheduler = 'local'
 
     args.device = th.device(f'cuda:{args.gpu}')
-    if args.world_size > 1:
+    # if args.world_size > 1:
         # let numba know which device we are running the kernels on
-        logging.info(f'rank {args.rank} avail gpus: {[x.id for x in GPUtil.getGPUs()]}')
-        logging.info(f'Selecting device: {args.gpu}')
-        cuda.select_device(args.gpu)
-        dist.init_process_group(backend=args.dist_backend, rank=args.rank, world_size=args.world_size,
-                                init_method=init_method)
+    logging.info(f'rank {args.rank} avail gpus: {[x.id for x in GPUtil.getGPUs()]}')
+    logging.info(f'Selecting device: {args.gpu}')
+    cuda.select_device(args.gpu)
+    dist.init_process_group(backend=args.dist_backend, rank=args.rank, world_size=args.world_size,
+                            init_method=init_method)
 
     ram_gpu_free_GB = []
     ram_cpu_free_GB = psutil.virtual_memory().available / 2 ** 30
