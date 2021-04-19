@@ -1,9 +1,9 @@
-# Welcome to Smpr3D 
+# Welcome to Smpr3D!
 > Smpr3d (pronounced 'semper 3D', latin for 'always 3D', short for **S**-**M**atrix **P**hase **R**etrieval & **3D** imaging) simplifies recovering 3D phase-contrast information from scanning diffraction measurements, such as those collected in **4D**-**S**canning **T**ransmission **E**lectron **M**icroscopy (**4D-STEM**) experiments
 
 
 🚨 **Smpr3D is a research project at an early stage of
-development. Expect monstrous bugs and razor-sharp edges!**
+development. Expect monstrous bugs and razor-sharp edges! A beta release is planned for M&M 2021.**
 
 ![CI](https://github.com/s-matrix/smpr3d/workflows/CI/badge.svg)
 
