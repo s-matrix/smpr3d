@@ -16,6 +16,6 @@ pwd; hostname; date
 module load cgpu
 module load pytorch/1.8.0-gpu
 #rm serial_test2.log
-srun -N 1 python ~/admm/tests/nesap_hackathon/reconstruct_simul_data_multi_gpu_single_node.py
+srun -N 1 python ~/smpr3d/examples/reconstruct_simul_data_multi_gpu_single_node.py
 
 date
