@@ -25,7 +25,7 @@ args.io.filename_data = 'atoms_aberrations_big.h5'
 
 summary = setup_logging(args.io.path, args.io.logname)
 
-args.dist_backend = 'nccl'  # 'mpi'
+args.dist_backend = 'mpi'  # 'mpi'
 args.dist_init_method = f'file://{args.io.path}sharedfile'
 args.node_config = configure_node(args.dist_backend, args.dist_init_method)
 
