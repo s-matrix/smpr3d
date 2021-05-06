@@ -5,22 +5,27 @@ __all__ = ['fftshift_checkerboard', 'cartesian_aberrations', 'memory_mb', 'memor
            'format_standard_param', 'asParam', 'make_default', 'PARAM_PREFIX', 'single_sideband_reconstruction',
            'single_sideband_kernel', 'sector_mask', 'wavelength', 'DOF', 'dense_to_sparse_kernel',
            'advanced_raster_scan', 'advanced_raster_scan', 'get_qx_qy_1D', 'get_qx_qy_2D', 'scatter_add_patches',
-           'gather_patches', 'HSV_to_RGB', 'P1A_to_HSV', 'imsave', 'plot_complex_multi', 'plot', 'zplot',
-           'plotAbsAngle', 'center_of_mass_kernel', 'sparse_to_dense_datacube_kernel_crop',
-           'sparse_to_dense_datacube_crop', 'sparse_to_dense_datacube_crop_gain_mask_kernel',
-           'sparse_to_dense_datacube_crop_gain_mask', 'fftshift_kernel', 'fftshift_pad_kernel',
-           'virtual_annular_image_kernel', 'crop_symmetric_around_center_kernel', 'crop_symmetric_around_center',
-           'rotate_kernel', 'rotate', 'sum_kernel', 'sum_frames', 'rebin_kernel', 'disk_overlap_function',
-           'disk_overlap_kernel', 'double_overlap_intensitities_in_range',
-           'find_rotation_angle_with_double_disk_overlap', 'cartesian_aberrations_single', 'cartesian_aberrations',
-           'aperture', 'ZernikeProbe2', 'ZernikeProbeSingle', 'ZernikeProbe', 'sdebug', 'h5write', 'h5append', 'h5read',
-           'h5info', 'h5options', 'prox_D_gaussian_kernel', 'prox_D_gaussian', 'gradz_poisson_sparse_kernel',
-           'gradz_poisson_sparse', 'gradz_gaussian_sparse_kernel', 'gradz_gaussian_sparse']
+           'gather_patches', 'array_split_divpoints_ntotal', 'array_split_divpoints', 'HSV_to_RGB', 'P1A_to_HSV',
+           'imsave', 'plot_complex_multi', 'plot', 'zplot', 'plotAbsAngle', 'center_of_mass_kernel',
+           'sparse_to_dense_datacube_kernel_crop', 'sparse_to_dense_datacube_crop',
+           'sparse_to_dense_datacube_crop_gain_mask_kernel', 'sparse_to_dense_datacube_crop_gain_mask',
+           'fftshift_kernel', 'fftshift_pad_kernel', 'virtual_annular_image_kernel',
+           'crop_symmetric_around_center_kernel', 'crop_symmetric_around_center', 'rotate_kernel', 'rotate',
+           'sum_kernel', 'sum_frames', 'rebin_kernel', 'disk_overlap_function', 'disk_overlap_kernel',
+           'double_overlap_intensitities_in_range', 'find_rotation_angle_with_double_disk_overlap',
+           'cartesian_aberrations_single', 'cartesian_aberrations', 'aperture', 'ZernikeProbe2', 'ZernikeProbeSingle',
+           'ZernikeProbe', 'sdebug', 'h5write', 'h5append', 'h5read', 'h5info', 'h5options', 'prox_D_gaussian_kernel',
+           'prox_D_gaussian', 'gradz_poisson_sparse_kernel', 'gradz_poisson_sparse', 'gradz_gaussian_sparse_kernel',
+           'gradz_gaussian_sparse', 'sparse_amplitude_loss_kernel', 'sparse_amplitude_loss']
 
 # Cell
 from numpy.fft import fftfreq
 import numpy as np
 from .torch_imports import *
+from numba import cuda
+import math as m
+import cmath as cm
+import sigpy as sp
 
 # Cell
 def fftshift_checkerboard(w, h):
@@ -464,19 +469,18 @@ def make_default(default_dict_or_file):
     pass
 
 # Cell
-from numba import cuda
-import math as m
-import cmath as cm
+
 def single_sideband_reconstruction(G, Qx_all, Qy_all, Kx_all, Ky_all, aberrations, theta_rot, alpha_rad,
                                    Ψ_Qp, Ψ_Qp_left_sb, Ψ_Qp_right_sb, eps, lam):
+    xp = sp.backend.get_array_module(G)
     threadsperblock = 2 ** 8
     blockspergrid = m.ceil(np.prod(G.shape) / threadsperblock)
-    strides = cp.array((np.array(G.strides) / (G.nbytes / G.size)).astype(np.int))
+    strides = xp.array((np.array(G.strides) / (G.nbytes / G.size)).astype(np.int))
     scale = 1
     single_sideband_kernel[blockspergrid, threadsperblock](G, strides, Qx_all, Qy_all, Kx_all, Ky_all, aberrations,
                                                            theta_rot, alpha_rad, Ψ_Qp, Ψ_Qp_left_sb,
                                                            Ψ_Qp_right_sb, eps, lam, scale)
-    cp.cuda.Device(Ψ_Qp.device).synchronize()
+    xp.cuda.Device(Ψ_Qp.device).synchronize()
 
 @cuda.jit
 def single_sideband_kernel(G, strides, Qx_all, Qy_all, Kx_all, Ky_all, aberrations, theta_rot, alpha,
@@ -789,7 +793,7 @@ def advanced_raster_scan(ny=10, nx=10, fast_axis=1, mirror=[1, 1], theta=0, dy=1
     return positions.astype(np.float32)
 
 # Cell
-import sigpy as sp
+
 def get_qx_qy_1D(M, dx, dtype, fft_shifted=False):
     xp = sp.backend.get_array_module(dx)
     qxa = xp.fft.fftfreq(M[0], dx[0]).astype(dtype)
@@ -940,6 +944,89 @@ def gather_patches(input, axes, positions, patch_size, out=None) -> th.Tensor:
 
     out = out.view(out_view)
     return out
+
+# Cell
+
+def array_split_divpoints_ntotal(Ntotal, indices_or_sections):
+    """
+    Split an array into multiple sub-arrays.
+    Please refer to the ``split`` documentation.  The only difference
+    between these functions is that ``array_split`` allows
+    `indices_or_sections` to be an integer that does *not* equally
+    divide the axis. For an array of length l that should be split
+    into n sections, it returns l % n sub-arrays of size l//n + 1
+    and the rest of size l//n.
+    See Also
+    --------
+    split : Split array into multiple sub-arrays of equal size.
+    Examples
+    --------
+    >>> x = np.arange(8.0)
+    >>> np.array_split(x, 3)
+        [array([0.,  1.,  2.]), array([3.,  4.,  5.]), array([6.,  7.])]
+    >>> x = np.arange(7.0)
+    >>> np.array_split(x, 3)
+        [array([0.,  1.,  2.]), array([3.,  4.]), array([5.,  6.])]
+    """
+    try:
+        # handle array case.
+        Nsections = len(indices_or_sections) + 1
+        div_points = [0] + list(indices_or_sections) + [Ntotal]
+    except TypeError:
+        # indices_or_sections is a scalar, not an array.
+        Nsections = int(indices_or_sections)
+        if Nsections <= 0:
+            raise ValueError('number sections must be larger than 0.')
+        Neach_section, extras = divmod(Ntotal, Nsections)
+        section_sizes = ([0] +
+                         extras * [Neach_section + 1] +
+                         (Nsections - extras) * [Neach_section])
+        div_points = np.array(section_sizes, dtype=np.intp).cumsum()
+
+    return div_points
+
+# Cell
+def array_split_divpoints(ary, indices_or_sections, axis=0):
+    """
+    Split an array into multiple sub-arrays.
+    Please refer to the ``split`` documentation.  The only difference
+    between these functions is that ``array_split`` allows
+    `indices_or_sections` to be an integer that does *not* equally
+    divide the axis. For an array of length l that should be split
+    into n sections, it returns l % n sub-arrays of size l//n + 1
+    and the rest of size l//n.
+    See Also
+    --------
+    split : Split array into multiple sub-arrays of equal size.
+    Examples
+    --------
+    >>> x = np.arange(8.0)
+    >>> np.array_split(x, 3)
+        [array([0.,  1.,  2.]), array([3.,  4.,  5.]), array([6.,  7.])]
+    >>> x = np.arange(7.0)
+    >>> np.array_split(x, 3)
+        [array([0.,  1.,  2.]), array([3.,  4.]), array([5.,  6.])]
+    """
+    try:
+        Ntotal = ary.shape[axis]
+    except AttributeError:
+        Ntotal = len(ary)
+    try:
+        # handle array case.
+        Nsections = len(indices_or_sections) + 1
+        div_points = [0] + list(indices_or_sections) + [Ntotal]
+    except TypeError:
+        # indices_or_sections is a scalar, not an array.
+        Nsections = int(indices_or_sections)
+        if Nsections <= 0:
+            raise ValueError('number sections must be larger than 0.')
+        Neach_section, extras = divmod(Ntotal, Nsections)
+        section_sizes = ([0] +
+                         extras * [Neach_section + 1] +
+                         (Nsections - extras) * [Neach_section])
+        div_points = np.array(section_sizes, dtype=np.intp).cumsum()
+
+    return div_points
 
 # Cell
 import matplotlib
@@ -1439,14 +1526,15 @@ def sum_kernel(indices, counts, frame_dimensions, sum, no_count_indicator):
 
 # Cell
 def sum_frames(frames, counts, frame_dimensions):
-    xp = sp.backend.get_array_module(frames)
     threadsperblock = (16, 16)
     blockspergrid = tuple(np.ceil(np.array(frames.shape[:2]) / threadsperblock).astype(np.int))
 
+    frames1 = sp.to_device(frames,0)
+    xp = sp.backend.get_array_module(frames1)
     sum = xp.zeros(frame_dimensions)
-    no_count_indicator = xp.iinfo(frames.dtype).max
-    frames1 = xp.array(frames)
     counts1 = xp.array(counts)
+    no_count_indicator = xp.iinfo(frames.dtype).max
+
     sum_kernel[blockspergrid, threadsperblock](frames1, counts1, xp.array(frame_dimensions), sum, no_count_indicator)
     return sum.get()
 
@@ -2717,13 +2805,6 @@ def h5info(filename, output=None):
 
 
 # Cell
-from .torch_imports import *
-from .util import cartesian_aberrations, fftshift_checkerboard
-
-
-
-
-# Cell
 import numpy as np
 import torch as th
 import math as m
@@ -2889,3 +2970,47 @@ def gradz_gaussian_sparse(out, z, a_indices, a_counts):
     no_count_indicator = th.iinfo(a_indices.dtype).max
     gradz_gaussian_sparse_kernel[blockspergrid, threadsperblock, stream](out, z, a_indices, a_counts, no_count_indicator)
     return z
+
+# Cell
+import torch as th
+import numpy as np
+
+from numba import cuda
+
+
+
+
+@cuda.jit
+def sparse_amplitude_loss_kernel(a_model, indices_target, counts_target, loss, grad, frame_dimensions,
+                                 no_count_indicator):
+    k = cuda.grid(1)
+    K, _ = indices_target.shape
+    MY, MX = frame_dimensions
+    if k < K:
+        for i in range(indices_target[k].shape[0]):
+            idx1d = indices_target[k, i]
+            my = idx1d // MX
+            mx = idx1d - my * MX
+            if idx1d != no_count_indicator:
+                grad[k, my, mx] = 1 - (counts_target[k, i] / (a_model[k, my, mx] + 1e-2))
+                cuda.atomic.add(loss, (0), (a_model[k, my, mx] - counts_target[k, i]) ** 2)
+
+def sparse_amplitude_loss(a_model, indices_target, counts_target, frame_dimensions):
+    """
+
+    :param a_model:             K x M1 x M2
+    :param indices_target:      K x num_max_counts
+    :param counts_target:       K x num_max_counts
+    :param frame_dimensions:    2
+    :return: loss (1,), grad (K x M1 x M2)
+    """
+    threadsperblock = (256,)
+    blockspergrid = tuple(np.ceil(np.array(indices_target.shape[0]) / threadsperblock).astype(np.int))
+
+    loss = th.zeros((1,), device=a_model.device, dtype=th.float32)
+    grad = th.ones_like(a_model)
+    no_count_indicator = th.iinfo(indices_target.dtype).max
+    sparse_amplitude_loss_kernel[blockspergrid, threadsperblock](a_model.detach(), indices_target.detach(),
+                                                                 counts_target.detach(), loss.detach(), grad.detach(),
+                                                                 frame_dimensions, no_count_indicator)
+    return loss, grad

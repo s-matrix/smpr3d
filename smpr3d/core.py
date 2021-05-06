@@ -15,17 +15,23 @@ import numpy as np
 import h5py
 #nbdev_comment from __future__ import annotations
 import sigpy as sp
+from fastcore.basics import *
 
 # Cell
 class Metadata4D:
-    def __init__(self, E_ev=None, ):
-        self.dr = None
-        self.k_max = None
-        self.alpha_rad = None
-        self.rotation_deg = None
-        self.E_ev = E_ev
-        self.wavelength = None
 
+    __repr__= basic_repr(['scan_step', 'pixel_step', 'k_max', 'alpha_rad', 'rotation_deg', 'E_ev', 'wavelength',
+                          'aberrations'])
+
+    def __init__(self, E_ev=None, ):
+        self.scan_step = np.array([0,0])
+        self.k_max = np.array([0,0])
+        self.alpha_rad = -1
+        self.rotation_deg = 0
+        self.E_ev = E_ev
+        self.wavelength = -1
+        self.aberrations = np.zeros((12,))
+        self.pixel_step = np.array([0,0])
 
     @staticmethod
     def from_dm4_file(filename):
@@ -33,9 +39,37 @@ class Metadata4D:
 
         with fileDM(filename) as f:
             m.E_ev = f.allTags['.ImageList.2.ImageTags.Microscope Info.Voltage']
-            m.dr = np.array(f.scale[-2:]) * 10
+            m.scan_step = np.array(f.scale[-2:]) * 10
         m.wavelength = wavelength(m.E_ev)
         return m
+
+    def to_h5(self, file_path, key):
+        with h5py.File(file_path, 'a') as f:
+            g = f.create_group(key)
+            g.create_dataset('scan_step', data=self.scan_step)
+            g.create_dataset('k_max', data=self.k_max)
+            g.create_dataset('alpha_rad', data=self.alpha_rad)
+            g.create_dataset('rotation_deg', data=self.rotation_deg)
+            g.create_dataset('E_ev', data=self.E_ev)
+            g.create_dataset('wavelength', data=self.wavelength)
+            g.create_dataset('aberrations', data=self.aberrations)
+            g.create_dataset('pixel_step', data=self.pixel_step)
+
+    @staticmethod
+    def from_h5(file_path, key):
+        res = Metadata4D()
+        with h5py.File(file_path, 'r') as f:
+            g = f[key]
+            res.scan_step = g['scan_step'][...]
+            res.pixel_step = g['pixel_step'][...]
+            res.k_max = g['k_max'][...]
+            res.alpha_rad = g['alpha_rad'][()]
+            res.rotation_deg = g['rotation_deg'][()]
+            res.E_ev = g['E_ev'][()]
+            res.wavelength = g['wavelength'][()]
+            res.aberrations = g['aberrations'][...]
+        return res
+
 
 # Cell
 #from py4DSTEM
@@ -102,7 +136,7 @@ def get_probe_size(DP, thresh_lower=0.01, thresh_upper=0.99, N=100):
     return r,x0,y0
 
 class Sparse4DData:
-
+    __repr__=basic_repr(['scan_dimensions', 'frame_dimensions'])
     def __init__(self):
         self.indices = None
         self.counts = None
@@ -148,10 +182,10 @@ class Sparse4DData:
             y_min_radius = np.min([center[0], self.frame_dimensions[0] - center[0]])
             x_min_radius = np.min([center[1], self.frame_dimensions[1] - center[1]])
             max_radius = np.min([y_min_radius, x_min_radius])
-        xp = sp.backend.get_array_module(self.indices)
-        new_frames, new_frame_dimensions = crop_symmetric_around_center(xp.array(self.indices),
-                                                                        xp.array(self.frame_dimensions),
-                                                                        center, max_radius)
+        inds = sp.to_device(self.indices,0)
+        frame_dimensions = sp.to_device(self.frame_dimensions, 0)
+        xp = sp.backend.get_array_module(inds)
+        new_frames, new_frame_dimensions = crop_symmetric_around_center(inds,frame_dimensions, center, max_radius)
         print(f'old frames shape: {self.indices.shape}')
         print(f'new frames shape: {new_frames.shape}')
         print(f'old frames frame_dimensions: {self.frame_dimensions}')
@@ -161,19 +195,20 @@ class Sparse4DData:
         self.counts[self.indices != np.iinfo(self.indices.dtype).max] = 1
         self.frame_dimensions = new_frame_dimensions
 
-    def crop_symmetric_center(self, center, max_radius = None):
+    def crop_symmetric_center(self, center, max_radius = None, verbose = True):
         if max_radius is None:
             y_min_radius = np.min([center[0], self.frame_dimensions[0] - center[0]])
             x_min_radius = np.min([center[1], self.frame_dimensions[1] - center[1]])
             max_radius = np.min([y_min_radius, x_min_radius])
-        xp = sp.backend.get_array_module(self.indices)
-        new_frames, new_frame_dimensions = crop_symmetric_around_center(xp.array(self.indices),
-                                                                        xp.array(self.frame_dimensions),
-                                                                        center, max_radius)
-        print(f'old frames shape: {self.indices.shape}')
-        print(f'new frames shape: {new_frames.shape}')
-        print(f'old frames frame_dimensions: {self.frame_dimensions}')
-        print(f'new frames frame_dimensions: {new_frame_dimensions}')
+        inds = sp.to_device(self.indices,0)
+        xp = sp.backend.get_array_module(inds)
+        frame_dims = xp.array(self.frame_dimensions)
+        new_frames, new_frame_dimensions = crop_symmetric_around_center(inds, frame_dims, center, max_radius)
+        if verbose:
+            print(f'old frames shape: {self.indices.shape}')
+            print(f'new frames shape: {new_frames.shape}')
+            print(f'old frames frame_dimensions: {self.frame_dimensions}')
+            print(f'new frames frame_dimensions: {new_frame_dimensions}')
         res = Sparse4DData()
         res.indices = new_frames
         res.counts = np.zeros(self.indices.shape, dtype=np.bool)
@@ -209,9 +244,9 @@ class Sparse4DData:
         c = np.zeros((2,))
         c[:] = (sh[-1] // 2, sh[-2] // 2)
         radius = np.ones((1,)) * sh[-1] // 2
-        xp = sp.backend.get_array_module(data.indices)
-        inds = xp.array(data.indices[:size, :size].astype(np.uint32))
-        cts = xp.array(data.counts[:size, :size].astype(np.uint32))
+        inds = sp.to_device(data.indices[:size, :size].astype(np.uint32),0)
+        cts = sp.to_device(data.counts[:size, :size].astype(np.uint32),0)
+        xp = sp.backend.get_array_module(inds)
         dc_subset = sparse_to_dense_datacube_crop(inds,cts, (size,size), data.frame_dimensions, c, radius, bin=2)
         dcs = xp.sum(dc_subset, (0, 1))
         m1 = dcs.get()
@@ -268,8 +303,8 @@ class Sparse4DData:
         counts = th.zeros((*dense.shape[:2], nonzeros), dtype=dtype_counts).cuda()
         dense_to_sparse_kernel[blockspergrid, threadsperblock](dense, indices, counts, th.tensor(res.frame_dimensions).cuda())
 
-        res.indices = indices.get()
-        res.counts = counts.get()
+        res.indices = indices.cpu().numpy()
+        res.counts = counts.cpu().numpy()
 
         print(f'frame_dimensions: {res.frame_dimensions}')
         print(f'scan_dimensions : {res.scan_dimensions}')
@@ -291,16 +326,25 @@ class Sparse4DData:
         scan_dimensions = sparse_data.scan_dimensions
         frame_dimensions = sparse_data.frame_dimensions
         center_frame = frame_dimensions / 2
-        radius_data = frame_dimensions[0] / 2
 
         threadsperblock = (16, 16)
         blockspergrid = tuple(np.ceil(np.array(indices.shape[:2]) / threadsperblock).astype(np.int))
 
         no_count_indicator = np.iinfo(indices.dtype).max
-        inds = th.tensor(indices)
+
+        inds = sp.to_device(indices, 0)
+        center_frame = sp.to_device(center_frame, 0)
+        scan_dimensions = sp.to_device(scan_dimensions, 0)
+
         fftshift_kernel[blockspergrid, threadsperblock](inds, center_frame, scan_dimensions, no_count_indicator)
-        sparse_data.indices = inds.get()
-        return sparse_data
+
+        res = Sparse4DData()
+        res.indices = inds.get()
+        res.counts = sparse_data.counts.copy()
+        res.scan_dimensions = sparse_data.scan_dimensions.copy()
+        res.frame_dimensions = sparse_data.frame_dimensions.copy()
+
+        return res
 
     @staticmethod
     def fftshift_and_pad_to(sparse_data: Sparse4DData, pad_to_frame_dimensions) -> Sparse4DData:
@@ -313,29 +357,50 @@ class Sparse4DData:
         blockspergrid = tuple(np.ceil(np.array(indices.shape[:2]) / threadsperblock).astype(np.int))
 
         no_count_indicator_old = np.iinfo(indices.dtype).max
+        center_frame = sp.to_device(center_frame,0)
+        xp = sp.backend.get_array_module(center_frame)
 
         inds = np.prod(pad_to_frame_dimensions)
         if inds > 2**15:
-            dtype = th.int64
+            dtype = xp.int64
         elif inds > 2**15:
-            dtype = th.int32
+            dtype = xp.int32
         elif inds > 2**8:
-            dtype = th.int16
+            dtype = xp.int16
         else:
-            dtype = th.uint8
+            dtype = xp.uint8
 
-        no_count_indicator_new = th.iinfo(dtype).max
+        no_count_indicator_new = xp.iinfo(dtype).max
 
-        inds = th.tensor(indices, dtype=dtype)
-        fftshift_pad_kernel[blockspergrid, threadsperblock](inds, center_frame, scan_dimensions,
-                                                            th.tensor(pad_to_frame_dimensions), no_count_indicator_old,
-                                                            no_count_indicator_new)
+        inds = sp.to_device(indices,0).astype(dtype)
+        pad_to_frame_dimensions = sp.to_device(pad_to_frame_dimensions,0)
+
+        scan_dimensions = sp.to_device(scan_dimensions,0)
+
+        fftshift_pad_kernel[blockspergrid, threadsperblock](inds, center_frame, scan_dimensions,  pad_to_frame_dimensions,
+                                                            no_count_indicator_old, no_count_indicator_new)
         sparse_data.indices = inds.get()
-        sparse_data.frame_dimensions = np.array(pad_to_frame_dimensions)
+        sparse_data.frame_dimensions = pad_to_frame_dimensions.get()
         return sparse_data
 
     def fftshift_(self):
-        return Sparse4DData.fftshift(self)
+        indices = self.indices
+        scan_dimensions = self.scan_dimensions
+        frame_dimensions = self.frame_dimensions
+        center_frame = frame_dimensions / 2
+
+        threadsperblock = (16, 16)
+        blockspergrid = tuple(np.ceil(np.array(indices.shape[:2]) / threadsperblock).astype(np.int))
+
+        no_count_indicator = np.iinfo(indices.dtype).max
+
+        inds = sp.to_device(indices, 0)
+        center_frame = sp.to_device(center_frame, 0)
+        scan_dimensions = sp.to_device(scan_dimensions, 0)
+
+        fftshift_kernel[blockspergrid, threadsperblock](inds, center_frame, scan_dimensions, no_count_indicator)
+        self.indices = inds.get()
+        return self
 
     def fftshift_and_pad_to_(self, pad_to_frame_dimensions):
         return Sparse4DData.fftshift_and_pad_to(self, pad_to_frame_dimensions)
@@ -345,14 +410,17 @@ class Sparse4DData:
         return res
 
     def virtual_annular_image(self, inner_radius, outer_radius, center):
-        xp = sp.backend.get_array_module(self.indices)
-        img = xp.zeros(tuple(self.scan_dimensions), dtype=np.uint32)
+        inds = sp.to_device(self.indices, 0)
+        xp = sp.backend.get_array_module(inds)
+        cts = xp.array(self.counts, dtype=xp.uint32)
+        ctr = xp.array(center)
+        frame_dims = xp.array(self.frame_dimensions)
+        img = xp.zeros(tuple(self.scan_dimensions), dtype=xp.uint32)
         no_count_indicator = xp.iinfo(self.indices.dtype).max
         threadsperblock = (16, 16)
         blockspergrid = tuple(np.ceil(np.array(self.indices.shape[:2]) / threadsperblock).astype(np.int))
-        virtual_annular_image_kernel[blockspergrid, threadsperblock](img, xp.array(self.indices), xp.array(self.counts).astype(np.uint32),
-                                                                     inner_radius, outer_radius, xp.array(center),
-                                                                     xp.array(self.frame_dimensions), no_count_indicator)
+        virtual_annular_image_kernel[blockspergrid, threadsperblock](img, inds, cts, inner_radius, outer_radius, ctr,
+                                                                     frame_dims, no_count_indicator)
         return img.get()
 
     def fluence(self, dr):
@@ -398,6 +466,25 @@ class Sparse4DData:
         comx -= np.mean(comx)
         comy -= np.mean(comy)
         return comy, comx
+
+    def to_h5(self, file_path, key):
+        with h5py.File(file_path, 'a') as f:
+            g = f.create_group(key)
+            g.create_dataset('counts', data=self.counts, compression="gzip", compression_opts=7)
+            g.create_dataset('indices', data=self.indices, compression="gzip", compression_opts=7)
+            g.create_dataset('frame_dimensions', data=self.frame_dimensions)
+            g.create_dataset('scan_dimensions', data=self.scan_dimensions)
+
+    @staticmethod
+    def from_h5(file_path, key):
+        res = Sparse4DData()
+        with h5py.File(file_path, 'r') as f:
+            g = f[key]
+            res.counts = g['counts'][...]
+            res.indices = g['indices'][...]
+            res.frame_dimensions = g['frame_dimensions'][...]
+            res.scan_dimensions = g['scan_dimensions'][...]
+        return res
 
 # Cell
 
