@@ -47,7 +47,55 @@ nb_path: "nbs/01_util.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="fftshift_checkerboard" class="doc_header"><code>fftshift_checkerboard</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L34" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>fftshift_checkerboard</code>(<strong><code>w</code></strong>, <strong><code>h</code></strong>)</p>
+<h4 id="array_split_divpoints_ntotal" class="doc_header"><code>array_split_divpoints_ntotal</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L35" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>array_split_divpoints_ntotal</code>(<strong><code>Ntotal</code></strong>, <strong><code>indices_or_sections</code></strong>)</p>
+</blockquote>
+<p>Split an array into multiple sub-arrays.
+Please refer to the <code>split</code> documentation.  The only difference
+between these functions is that <code>array_split</code> allows
+<code>indices_or_sections</code> to be an integer that does <em>not</em> equally
+divide the axis. For an array of length l that should be split
+into n sections, it returns l % n sub-arrays of size l//n + 1
+and the rest of size l//n.</p>
+<h2 id="See-Also">See Also<a class="anchor-link" href="#See-Also"> </a></h2><p>split : Split array into multiple sub-arrays of equal size.</p>
+<h2 id="Examples">Examples<a class="anchor-link" href="#Examples"> </a></h2><blockquote><blockquote><blockquote><p>x = np.arange(8.0)
+np.array_split(x, 3)
+    [array([0.,  1.,  2.]), array([3.,  4.,  5.]), array([6.,  7.])]
+x = np.arange(7.0)
+np.array_split(x, 3)
+    [array([0.,  1.,  2.]), array([3.,  4.]), array([5.,  6.])]</p>
+</blockquote>
+</blockquote>
+</blockquote>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4 id="fftshift_checkerboard" class="doc_header"><code>fftshift_checkerboard</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L74" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>fftshift_checkerboard</code>(<strong><code>w</code></strong>, <strong><code>h</code></strong>)</p>
 </blockquote>
 
 </div>
@@ -115,7 +163,7 @@ nb_path: "nbs/01_util.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="memory_mb" class="doc_header"><code>memory_mb</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L110" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>memory_mb</code>(<strong><code>x</code></strong>, <strong><code>dtype</code></strong>=<em><code>None</code></em>)</p>
+<h4 id="memory_mb" class="doc_header"><code>memory_mb</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L150" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>memory_mb</code>(<strong><code>x</code></strong>, <strong><code>dtype</code></strong>=<em><code>None</code></em>)</p>
 </blockquote>
 
 </div>
@@ -139,38 +187,7 @@ nb_path: "nbs/01_util.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="memory_gb" class="doc_header"><code>memory_gb</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L120" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>memory_gb</code>(<strong><code>x</code></strong>, <strong><code>dtype</code></strong>=<em><code>None</code></em>)</p>
-</blockquote>
-
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-    {% endraw %}
-
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-    {% endraw %}
-
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-<div class="output_markdown rendered_html output_subarea ">
-<h4 id="fourier_coordinates_2D" class="doc_header"><code>fourier_coordinates_2D</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L130" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>fourier_coordinates_2D</code>(<strong><code>N</code></strong>, <strong><code>dx</code></strong>=<em><code>[1.0, 1.0]</code></em>, <strong><code>centered</code></strong>=<em><code>True</code></em>)</p>
+<h4 id="memory_gb" class="doc_header"><code>memory_gb</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L160" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>memory_gb</code>(<strong><code>x</code></strong>, <strong><code>dtype</code></strong>=<em><code>None</code></em>)</p>
 </blockquote>
 
 </div>
@@ -201,7 +218,38 @@ nb_path: "nbs/01_util.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="array_split_divpoints" class="doc_header"><code>array_split_divpoints</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L954" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>array_split_divpoints</code>(<strong><code>ary</code></strong>, <strong><code>indices_or_sections</code></strong>, <strong><code>axis</code></strong>=<em><code>0</code></em>)</p>
+<h4 id="fourier_coordinates_2D" class="doc_header"><code>fourier_coordinates_2D</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L170" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>fourier_coordinates_2D</code>(<strong><code>N</code></strong>, <strong><code>dx</code></strong>=<em><code>[1.0, 1.0]</code></em>, <strong><code>centered</code></strong>=<em><code>True</code></em>)</p>
+</blockquote>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4 id="array_split_divpoints" class="doc_header"><code>array_split_divpoints</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L994" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>array_split_divpoints</code>(<strong><code>ary</code></strong>, <strong><code>indices_or_sections</code></strong>, <strong><code>axis</code></strong>=<em><code>0</code></em>)</p>
 </blockquote>
 <p>Split an array into multiple sub-arrays.
 Please refer to the <code>split</code> documentation.  The only difference
@@ -249,7 +297,7 @@ np.array_split(x, 3)
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="R_factor" class="doc_header"><code>R_factor</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L184" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>R_factor</code>(<strong><code>z</code></strong>, <strong><code>a</code></strong>, <strong><code>world_size</code></strong>=<em><code>1</code></em>)</p>
+<h4 id="R_factor" class="doc_header"><code>R_factor</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L224" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>R_factor</code>(<strong><code>z</code></strong>, <strong><code>a</code></strong>, <strong><code>world_size</code></strong>=<em><code>1</code></em>)</p>
 </blockquote>
 <p>Calculate R error metric = sum(|z-a|)/sum(|a|).</p>
 
@@ -281,7 +329,7 @@ np.array_split(x, 3)
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="distance" class="doc_header"><code>distance</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L194" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>distance</code>(<strong><code>z</code></strong>, <strong><code>x</code></strong>)</p>
+<h4 id="distance" class="doc_header"><code>distance</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L234" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>distance</code>(<strong><code>z</code></strong>, <strong><code>x</code></strong>)</p>
 </blockquote>
 <p>Distance of two complex vectors
 :param z: tensor
@@ -316,7 +364,7 @@ np.array_split(x, 3)
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="rel_dist" class="doc_header"><code>rel_dist</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L210" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>rel_dist</code>(<strong><code>z</code></strong>, <strong><code>x</code></strong>)</p>
+<h4 id="rel_dist" class="doc_header"><code>rel_dist</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L250" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>rel_dist</code>(<strong><code>z</code></strong>, <strong><code>x</code></strong>)</p>
 </blockquote>
 <p>Distance of two complex vectors
 :param z: tensor
@@ -351,7 +399,7 @@ np.array_split(x, 3)
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="Param" class="doc_header"><code>class</code> <code>Param</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L223" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>Param</code>(<strong><code>__d__</code></strong>=<em><code>None</code></em>, <strong>**<code>kwargs</code></strong>) :: <code>dict</code></p>
+<h2 id="Param" class="doc_header"><code>class</code> <code>Param</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L263" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>Param</code>(<strong><code>__d__</code></strong>=<em><code>None</code></em>, <strong>**<code>kwargs</code></strong>) :: <code>dict</code></p>
 </blockquote>
 <p>Convenience class: a dictionary that gives access to its keys
 through attributes.</p>
@@ -392,7 +440,7 @@ in the updated Param instance.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="validate_standard_param" class="doc_header"><code>validate_standard_param</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L400" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>validate_standard_param</code>(<strong><code>sp</code></strong>, <strong><code>p</code></strong>=<em><code>None</code></em>, <strong><code>prefix</code></strong>=<em><code>None</code></em>)</p>
+<h4 id="validate_standard_param" class="doc_header"><code>validate_standard_param</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L440" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>validate_standard_param</code>(<strong><code>sp</code></strong>, <strong><code>p</code></strong>=<em><code>None</code></em>, <strong><code>prefix</code></strong>=<em><code>None</code></em>)</p>
 </blockquote>
 <p>validate_standard_param(sp) checks if sp follows the standard parameter convention.
 validate_standard_param(sp, p) attemps to check if p is a valid implementation of sp.</p>
@@ -419,7 +467,7 @@ validate_standard_param(sp, p) attemps to check if p is a valid implementation o
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="format_standard_param" class="doc_header"><code>format_standard_param</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L434" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>format_standard_param</code>(<strong><code>p</code></strong>)</p>
+<h4 id="format_standard_param" class="doc_header"><code>format_standard_param</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L474" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>format_standard_param</code>(<strong><code>p</code></strong>)</p>
 </blockquote>
 <p>Pretty-print a Standard Param class.</p>
 
@@ -444,7 +492,7 @@ validate_standard_param(sp, p) attemps to check if p is a valid implementation o
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="asParam" class="doc_header"><code>asParam</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L451" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>asParam</code>(<strong><code>obj</code></strong>)</p>
+<h4 id="asParam" class="doc_header"><code>asParam</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L491" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>asParam</code>(<strong><code>obj</code></strong>)</p>
 </blockquote>
 <p>Convert the input to a Param.</p>
 <h2 id="Parameters">Parameters<a class="anchor-link" href="#Parameters"> </a></h2><p>a : dict_like
@@ -475,7 +523,7 @@ out : Param
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="make_default" class="doc_header"><code>make_default</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L468" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>make_default</code>(<strong><code>default_dict_or_file</code></strong>)</p>
+<h4 id="make_default" class="doc_header"><code>make_default</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L508" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>make_default</code>(<strong><code>default_dict_or_file</code></strong>)</p>
 </blockquote>
 <p>convert description dict to a module dict using a possibly verbose Q &amp; A game</p>
 
@@ -507,7 +555,7 @@ out : Param
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="single_sideband_reconstruction" class="doc_header"><code>single_sideband_reconstruction</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L476" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>single_sideband_reconstruction</code>(<strong><code>G</code></strong>, <strong><code>Qx_all</code></strong>, <strong><code>Qy_all</code></strong>, <strong><code>Kx_all</code></strong>, <strong><code>Ky_all</code></strong>, <strong><code>aberrations</code></strong>, <strong><code>theta_rot</code></strong>, <strong><code>alpha_rad</code></strong>, <strong><code>Ψ_Qp</code></strong>, <strong><code>Ψ_Qp_left_sb</code></strong>, <strong><code>Ψ_Qp_right_sb</code></strong>, <strong><code>eps</code></strong>, <strong><code>lam</code></strong>)</p>
+<h4 id="single_sideband_reconstruction" class="doc_header"><code>single_sideband_reconstruction</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L516" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>single_sideband_reconstruction</code>(<strong><code>G</code></strong>, <strong><code>Qx_all</code></strong>, <strong><code>Qy_all</code></strong>, <strong><code>Kx_all</code></strong>, <strong><code>Ky_all</code></strong>, <strong><code>aberrations</code></strong>, <strong><code>theta_rot</code></strong>, <strong><code>alpha_rad</code></strong>, <strong><code>Ψ_Qp</code></strong>, <strong><code>Ψ_Qp_left_sb</code></strong>, <strong><code>Ψ_Qp_right_sb</code></strong>, <strong><code>eps</code></strong>, <strong><code>lam</code></strong>)</p>
 </blockquote>
 
 </div>
@@ -531,7 +579,7 @@ out : Param
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7f5228d76490>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f5228d76490></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f5228d76490></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="AutoJitCUDAKernel object at 0x7f927bf40430>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f927bf40430></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f927bf40430></code>(<strong>*<code>args</code></strong>)</p>
 </blockquote>
 <p>CUDA Kernel object. When called, the kernel object will specialize itself
 for the given arguments (if no suitable specialized version already exists)
@@ -568,7 +616,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="sector_mask" class="doc_header"><code>sector_mask</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L634" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>sector_mask</code>(<strong><code>shape</code></strong>, <strong><code>centre</code></strong>, <strong><code>radius</code></strong>, <strong><code>angle_range</code></strong>=<em><code>(0, 360)</code></em>)</p>
+<h4 id="sector_mask" class="doc_header"><code>sector_mask</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L674" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>sector_mask</code>(<strong><code>shape</code></strong>, <strong><code>centre</code></strong>, <strong><code>radius</code></strong>, <strong><code>angle_range</code></strong>=<em><code>(0, 360)</code></em>)</p>
 </blockquote>
 <p>Return a boolean mask for a circular sector. The start/stop angles in
 <code>angle_range</code> should be given in clockwise order.</p>
@@ -601,7 +649,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="wavelength" class="doc_header"><code>wavelength</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L665" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>wavelength</code>(<strong><code>E_eV</code></strong>)</p>
+<h4 id="wavelength" class="doc_header"><code>wavelength</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L705" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>wavelength</code>(<strong><code>E_eV</code></strong>)</p>
 </blockquote>
 
 </div>
@@ -625,7 +673,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="DOF" class="doc_header"><code>DOF</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L672" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>DOF</code>(<strong><code>alpha</code></strong>, <strong><code>E_eV</code></strong>)</p>
+<h4 id="DOF" class="doc_header"><code>DOF</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L712" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>DOF</code>(<strong><code>alpha</code></strong>, <strong><code>E_eV</code></strong>)</p>
 </blockquote>
 
 </div>
@@ -656,7 +704,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7f5228d331f0>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f5228d331f0></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f5228d331f0></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="AutoJitCUDAKernel object at 0x7f927befc190>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f927befc190></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f927befc190></code>(<strong>*<code>args</code></strong>)</p>
 </blockquote>
 <p>CUDA Kernel object. When called, the kernel object will specialize itself
 for the given arguments (if no suitable specialized version already exists)
@@ -686,7 +734,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="advanced_raster_scan" class="doc_header"><code>advanced_raster_scan</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L750" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>advanced_raster_scan</code>(<strong><code>ny</code></strong>=<em><code>10</code></em>, <strong><code>nx</code></strong>=<em><code>10</code></em>, <strong><code>fast_axis</code></strong>=<em><code>1</code></em>, <strong><code>mirror</code></strong>=<em><code>[1, 1]</code></em>, <strong><code>theta</code></strong>=<em><code>0</code></em>, <strong><code>dy</code></strong>=<em><code>1</code></em>, <strong><code>dx</code></strong>=<em><code>1</code></em>)</p>
+<h4 id="advanced_raster_scan" class="doc_header"><code>advanced_raster_scan</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L790" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>advanced_raster_scan</code>(<strong><code>ny</code></strong>=<em><code>10</code></em>, <strong><code>nx</code></strong>=<em><code>10</code></em>, <strong><code>fast_axis</code></strong>=<em><code>1</code></em>, <strong><code>mirror</code></strong>=<em><code>[1, 1]</code></em>, <strong><code>theta</code></strong>=<em><code>0</code></em>, <strong><code>dy</code></strong>=<em><code>1</code></em>, <strong><code>dx</code></strong>=<em><code>1</code></em>)</p>
 </blockquote>
 <p>Generates as raster scan.</p>
 <h2 id="Parameters">Parameters<a class="anchor-link" href="#Parameters"> </a></h2><p>ny, nx : int
@@ -725,7 +773,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="advanced_raster_scan" class="doc_header"><code>advanced_raster_scan</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L750" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>advanced_raster_scan</code>(<strong><code>ny</code></strong>=<em><code>10</code></em>, <strong><code>nx</code></strong>=<em><code>10</code></em>, <strong><code>fast_axis</code></strong>=<em><code>1</code></em>, <strong><code>mirror</code></strong>=<em><code>[1, 1]</code></em>, <strong><code>theta</code></strong>=<em><code>0</code></em>, <strong><code>dy</code></strong>=<em><code>1</code></em>, <strong><code>dx</code></strong>=<em><code>1</code></em>)</p>
+<h4 id="advanced_raster_scan" class="doc_header"><code>advanced_raster_scan</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L790" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>advanced_raster_scan</code>(<strong><code>ny</code></strong>=<em><code>10</code></em>, <strong><code>nx</code></strong>=<em><code>10</code></em>, <strong><code>fast_axis</code></strong>=<em><code>1</code></em>, <strong><code>mirror</code></strong>=<em><code>[1, 1]</code></em>, <strong><code>theta</code></strong>=<em><code>0</code></em>, <strong><code>dy</code></strong>=<em><code>1</code></em>, <strong><code>dx</code></strong>=<em><code>1</code></em>)</p>
 </blockquote>
 <p>Generates as raster scan.</p>
 <h2 id="Parameters">Parameters<a class="anchor-link" href="#Parameters"> </a></h2><p>ny, nx : int
@@ -764,7 +812,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="get_qx_qy_1D" class="doc_header"><code>get_qx_qy_1D</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L800" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>get_qx_qy_1D</code>(<strong><code>M</code></strong>, <strong><code>dx</code></strong>, <strong><code>dtype</code></strong>, <strong><code>fft_shifted</code></strong>=<em><code>False</code></em>)</p>
+<h4 id="get_qx_qy_1D" class="doc_header"><code>get_qx_qy_1D</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L840" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>get_qx_qy_1D</code>(<strong><code>M</code></strong>, <strong><code>dx</code></strong>, <strong><code>dtype</code></strong>, <strong><code>fft_shifted</code></strong>=<em><code>False</code></em>)</p>
 </blockquote>
 
 </div>
@@ -788,7 +836,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="get_qx_qy_2D" class="doc_header"><code>get_qx_qy_2D</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L810" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>get_qx_qy_2D</code>(<strong><code>M</code></strong>, <strong><code>dx</code></strong>, <strong><code>dtype</code></strong>, <strong><code>fft_shifted</code></strong>=<em><code>False</code></em>)</p>
+<h4 id="get_qx_qy_2D" class="doc_header"><code>get_qx_qy_2D</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L850" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>get_qx_qy_2D</code>(<strong><code>M</code></strong>, <strong><code>dx</code></strong>, <strong><code>dtype</code></strong>, <strong><code>fft_shifted</code></strong>=<em><code>False</code></em>)</p>
 </blockquote>
 
 </div>
@@ -834,7 +882,7 @@ Converted 10a_fasta.ipynb.
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="scatter_add_patches" class="doc_header"><code>scatter_add_patches</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L825" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>scatter_add_patches</code>(<strong><code>input</code></strong>:<code>Tensor</code>, <strong><code>out</code></strong>:<code>Tensor</code>, <strong><code>axes</code></strong>, <strong><code>positions</code></strong>, <strong><code>patch_size</code></strong>, <strong><code>reduce_dim</code></strong>=<em><code>None</code></em>)</p>
+<h4 id="scatter_add_patches" class="doc_header"><code>scatter_add_patches</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L865" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>scatter_add_patches</code>(<strong><code>input</code></strong>:<code>Tensor</code>, <strong><code>out</code></strong>:<code>Tensor</code>, <strong><code>axes</code></strong>, <strong><code>positions</code></strong>, <strong><code>patch_size</code></strong>, <strong><code>reduce_dim</code></strong>=<em><code>None</code></em>)</p>
 </blockquote>
 <p>Scatter_adds K patches of size :patch_size: at axes [ax1, ax2] into the output tensor. The patches are added at
 positions :positions:. Additionally, several dimensions of the input tensor can be summed, specified by reduce_dims.</p>
@@ -874,7 +922,7 @@ positions :positions:. Additionally, several dimensions of the input tensor can 
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="gather_patches" class="doc_header"><code>gather_patches</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L887" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>gather_patches</code>(<strong><code>input</code></strong>, <strong><code>axes</code></strong>, <strong><code>positions</code></strong>, <strong><code>patch_size</code></strong>, <strong><code>out</code></strong>=<em><code>None</code></em>)</p>
+<h4 id="gather_patches" class="doc_header"><code>gather_patches</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L927" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>gather_patches</code>(<strong><code>input</code></strong>, <strong><code>axes</code></strong>, <strong><code>positions</code></strong>, <strong><code>patch_size</code></strong>, <strong><code>out</code></strong>=<em><code>None</code></em>)</p>
 </blockquote>
 <p>Gathers K patches of size :patch_size: at axes [ax1, ax2] of the input tensor. The patches are collected started at
 K positions pos.</p>
@@ -915,7 +963,7 @@ then :out: is an n-dimensional tensor with size  (K, x_0, x_1, x_2, ..., x_a, pa
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="array_split_divpoints" class="doc_header"><code>array_split_divpoints</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L954" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>array_split_divpoints</code>(<strong><code>ary</code></strong>, <strong><code>indices_or_sections</code></strong>, <strong><code>axis</code></strong>=<em><code>0</code></em>)</p>
+<h4 id="array_split_divpoints" class="doc_header"><code>array_split_divpoints</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L994" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>array_split_divpoints</code>(<strong><code>ary</code></strong>, <strong><code>indices_or_sections</code></strong>, <strong><code>axis</code></strong>=<em><code>0</code></em>)</p>
 </blockquote>
 <p>Split an array into multiple sub-arrays.
 Please refer to the <code>split</code> documentation.  The only difference

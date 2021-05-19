@@ -2,7 +2,8 @@
 
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
-index = {"fftshift_checkerboard": "01_util.ipynb",
+index = {"array_split_divpoints_ntotal": "01_util.ipynb",
+         "fftshift_checkerboard": "01_util.ipynb",
          "cartesian_aberrations": "01d_util_illumination.ipynb",
          "memory_mb": "01_util.ipynb",
          "memory_gb": "01_util.ipynb",
@@ -35,7 +36,6 @@ index = {"fftshift_checkerboard": "01_util.ipynb",
          "plot": "01a_util_plot.ipynb",
          "zplot": "01a_util_plot.ipynb",
          "plotAbsAngle": "01a_util_plot.ipynb",
-         "array_split_divpoints_ntotal": "01b_util_kernels.ipynb",
          "center_of_mass_kernel": "01b_util_kernels.ipynb",
          "sparse_to_dense_datacube_kernel_crop": "01b_util_kernels.ipynb",
          "sparse_to_dense_datacube_crop": "01b_util_kernels.ipynb",
