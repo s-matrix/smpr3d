@@ -13,7 +13,6 @@
     "Utils for setup": "setup.html",
     "Operators": "operators.html",
     "Kernels for operators": "operators.kernels.html",
-    "Custom modules and functions": "functional.html",
     "Loss functions": "loss_functions.html",
     "Core": "core.html"
   }

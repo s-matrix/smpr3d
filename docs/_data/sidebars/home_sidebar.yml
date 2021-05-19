@@ -46,9 +46,6 @@ entries:
       title: Kernels for operators
       url: operators.kernels.html
     - output: web,pdf
-      title: Custom modules and functions
-      url: functional.html
-    - output: web,pdf
       title: Loss functions
       url: loss_functions.html
     - output: web,pdf

@@ -16,6 +16,7 @@ import h5py
 #nbdev_comment from __future__ import annotations
 import sigpy as sp
 from fastcore.basics import *
+from numba import cuda
 
 # Cell
 class Metadata4D:
@@ -254,20 +255,23 @@ class Sparse4DData:
         r, y0, x0 = get_probe_size(m)
         return 2 * np.array([y0,x0]), r*2
 
-    def determine_center_and_radius(self, manual=False, size=25):
-        return Sparse4DData._determine_center_and_radius(self, manual, size=size)
+    def determine_center_and_radius(self, manual=False, size=25, threshold=3e-1):
+        return Sparse4DData._determine_center_and_radius(self, manual, size=size, threshold=threshold)
 
-    def to_dense(self, bin_factor):
+    def to_dense(self, bin_factor, n_batches=4):
         dense = sparse_to_dense_datacube_crop_gain_mask(self.indices, self.counts.astype(np.int16), self.scan_dimensions,
                                                 self.frame_dimensions, self.frame_dimensions/2, self.frame_dimensions[0]/2,
-                                                self.frame_dimensions[0]/2, binning=bin_factor, fftshift=False)
+                                                self.frame_dimensions[0]/2, binning=bin_factor, n_batches=n_batches, fftshift=False)
         return dense
 
     @staticmethod
-    def from_dense(dense, make_float = False):
+    def from_dense(dense, make_float = False, n_batches=1):
         res = Sparse4DData()
         res.frame_dimensions = np.array(dense.shape[-2:])
         res.scan_dimensions = np.array(dense.shape[:2])
+
+        cuda.select_device(1)
+        dev = th.device('cuda:1')
 
         inds = np.prod(res.frame_dimensions)
         if inds > 2**31:
@@ -295,28 +299,49 @@ class Sparse4DData:
             else:
                 dtype_counts = th.uint8
 
+        print(f'Using dtype: {dtype} for indices')
+        print(f'Using dtype: {dtype_counts} for counts')
+
         threadsperblock = (16, 16)
         blockspergrid = tuple(np.ceil(res.scan_dimensions / threadsperblock).astype(np.int))
-        dense = th.tensor(dense).cuda()
-        indices = th.zeros((*dense.shape[:2], nonzeros), dtype=dtype).cuda()
-        indices[:] = th.iinfo(dtype).max
-        counts = th.zeros((*dense.shape[:2], nonzeros), dtype=dtype_counts).cuda()
-        dense_to_sparse_kernel[blockspergrid, threadsperblock](dense, indices, counts, th.tensor(res.frame_dimensions).cuda())
 
-        res.indices = indices.cpu().numpy()
-        res.counts = counts.cpu().numpy()
+        ds = dense.shape
+        K = dense.shape[0]
+        divpts = array_split_divpoints_ntotal(K, n_batches)
+
+        dense = th.as_tensor(dense)
+        indices = th.zeros((*dense.shape[:2], nonzeros), dtype=dtype)
+        counts = th.zeros((*dense.shape[:2], nonzeros), dtype=dtype_counts)
+
+        indices[:] = th.iinfo(dtype).max
+        fd = th.tensor(res.frame_dimensions).to(dev)
+        for b in range(n_batches):
+
+            denseb = dense[divpts[b]:divpts[b + 1]].to(dev)
+            indicesb = indices[divpts[b]:divpts[b + 1]].to(dev)
+            indicesb[:] = th.iinfo(dtype).max
+            countsb = counts[divpts[b]:divpts[b + 1]].to(dev)
+
+            dense_to_sparse_kernel[blockspergrid, threadsperblock](denseb, indicesb, countsb, fd)
+
+            counts[divpts[b]:divpts[b + 1]] = countsb.cpu()
+            indices[divpts[b]:divpts[b + 1]] = indicesb.cpu()
+
+        res.indices = indices.numpy()
+        res.counts = counts.numpy()
 
         print(f'frame_dimensions: {res.frame_dimensions}')
         print(f'scan_dimensions : {res.scan_dimensions}')
-        print(f'Using dtype: {dtype} for indices')
-        print(f'Using dtype: {dtype_counts} for counts')
+
+        cuda.select_device(0)
+
         return res
 
     @staticmethod
-    def rebin(sparse_data: Sparse4DData, bin_factor : int) -> Sparse4DData:
+    def rebin(sparse_data: Sparse4DData, bin_factor : int, n_batches=4) -> Sparse4DData:
         dense = sparse_to_dense_datacube_crop_gain_mask(sparse_data.indices, sparse_data.counts.astype(np.int16), sparse_data.scan_dimensions,
                                                 sparse_data.frame_dimensions, sparse_data.frame_dimensions/2, sparse_data.frame_dimensions[0]/2,
-                                                sparse_data.frame_dimensions[0]/2, binning=bin_factor, fftshift=False)
+                                                sparse_data.frame_dimensions[0]/2, binning=bin_factor, n_batches=n_batches, fftshift=False)
         sparse = Sparse4DData.from_dense(dense)
         return sparse
 
@@ -405,8 +430,8 @@ class Sparse4DData:
     def fftshift_and_pad_to_(self, pad_to_frame_dimensions):
         return Sparse4DData.fftshift_and_pad_to(self, pad_to_frame_dimensions)
 
-    def bin(self, binning_factor):
-        res = Sparse4DData.rebin(self, binning_factor)
+    def bin(self, binning_factor, n_batches=4):
+        res = Sparse4DData.rebin(self, binning_factor, n_batches=n_batches)
         return res
 
     def virtual_annular_image(self, inner_radius, outer_radius, center):

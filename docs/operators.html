@@ -33,6 +33,13 @@ nb_path: "nbs/30_operators.ipynb"
     
 <div class="cell border-box-sizing code_cell rendered">
 
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
 <div class="output_wrapper">
 <div class="output">
 
@@ -40,7 +47,263 @@ nb_path: "nbs/30_operators.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="A" class="doc_header"><code>A</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L14" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>A</code>(<strong><code>S</code></strong>, <strong><code>Psi</code></strong>, <strong><code>r</code></strong>, <strong><code>r_min</code></strong>, <strong><code>out</code></strong>=<em><code>None</code></em>, <strong><code>Mx</code></strong>=<em><code>0</code></em>, <strong><code>My</code></strong>=<em><code>0</code></em>)</p>
+<h4 id="calc_psi" class="doc_header"><code>calc_psi</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L15" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>calc_psi</code>(<strong><code>r</code></strong>, <strong><code>t</code></strong>, <strong><code>z</code></strong>, <strong><code>out</code></strong>)</p>
+</blockquote>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4 id="AtF2" class="doc_header"><code>AtF2</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L29" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AtF2</code>(<strong><code>z</code></strong>, <strong><code>psi</code></strong>, <strong><code>r</code></strong>, <strong><code>out</code></strong>)</p>
+</blockquote>
+<p>:param z:   K x MY x MX
+:param psi: B x K x MY x MX
+:param r:   K x 2
+:param out: B x NY x NX
+:return:</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4 id="dS" class="doc_header"><code>dS</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L45" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>dS</code>(<strong><code>z</code></strong>, <strong><code>z_old</code></strong>, <strong><code>psi</code></strong>, <strong><code>psi_int</code></strong>, <strong><code>psi_int_max</code></strong>, <strong><code>r</code></strong>, <strong><code>out</code></strong>, <strong><code>alpha</code></strong>=<em><code>0.1</code></em>)</p>
+</blockquote>
+<p>:param z:           K x MY x MX
+:param z_old:       K x MY x MX
+:param psi:         B x K x MY x MX
+:param psi_int:     B x K x MY x MX
+:param psi_int_max: B x K
+:param r:           K x 2
+:param out:         B x NY x NX
+:param alpha:       float
+:return:</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4 id="A_realspace" class="doc_header"><code>A_realspace</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L65" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>A_realspace</code>(<strong><code>r</code></strong>, <strong><code>t</code></strong>, <strong><code>psi</code></strong>, <strong><code>out</code></strong>)</p>
+</blockquote>
+<p>:param r:   K x 2
+:param t:   BB x NY x NX
+:param psi: B x K x MY x MX
+:param out: K x MY x MX
+:return:</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4 id="calc_psi_denom" class="doc_header"><code>calc_psi_denom</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L83" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>calc_psi_denom</code>(<strong><code>r</code></strong>, <strong><code>t</code></strong>, <strong><code>out</code></strong>)</p>
+</blockquote>
+<p>:param r: K x 2
+:param t: BB x NY x NX
+:param out: BB x MY x MX
+:return:</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4 id="Qoverlap_real2" class="doc_header"><code>Qoverlap_real2</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L102" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Qoverlap_real2</code>(<strong><code>r</code></strong>, <strong><code>z</code></strong>, <strong><code>out</code></strong>)</p>
+</blockquote>
+<p>:param r: K x 2
+:param z: BB x K x MY x MX
+:param out: BB x NY x NX
+:return: out</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4 id="split" class="doc_header"><code>split</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L120" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>split</code>(<strong><code>S</code></strong>, <strong><code>r</code></strong>, <strong><code>MY</code></strong>, <strong><code>MX</code></strong>)</p>
+</blockquote>
+<p>:param S:  B x NY x NX
+:param r:  K x 2
+:param MY: int
+:param MX: int
+:return:</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4 id="A" class="doc_header"><code>A</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L142" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>A</code>(<strong><code>S</code></strong>, <strong><code>Psi</code></strong>, <strong><code>r</code></strong>, <strong><code>r_min</code></strong>, <strong><code>out</code></strong>=<em><code>None</code></em>, <strong><code>Mx</code></strong>=<em><code>0</code></em>, <strong><code>My</code></strong>=<em><code>0</code></em>)</p>
 </blockquote>
 <p>Fastest version, takes precomputed phase factors, assumes S-matrix with beam tilt included</p>
 <p>:param S:               B x NY x NX
@@ -70,7 +333,7 @@ nb_path: "nbs/30_operators.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="ScriptFunction object at 0x7f76faaedef0>" class="doc_header"><code>ScriptFunction object at 0x7f76faaedef0></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>ScriptFunction object at 0x7f76faaedef0></code>()</p>
+<h4 id="ScriptFunction object at 0x7fd3f782ba90>" class="doc_header"><code>ScriptFunction object at 0x7fd3f782ba90></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>ScriptFunction object at 0x7fd3f782ba90></code>()</p>
 </blockquote>
 <p>Complex matrix multiplication of tensors a and b.</p>
 <p>Pass conjugate = True to conjugate tensor b in the multiplication.</p>
@@ -96,7 +359,7 @@ nb_path: "nbs/30_operators.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="A_fast_full2" class="doc_header"><code>A_fast_full2</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L50" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>A_fast_full2</code>(<strong><code>S</code></strong>, <strong><code>phase_factors</code></strong>, <strong><code>r</code></strong>, <strong><code>r_min</code></strong>, <strong><code>MY</code></strong>, <strong><code>MX</code></strong>)</p>
+<h4 id="A_fast_full2" class="doc_header"><code>A_fast_full2</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L178" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>A_fast_full2</code>(<strong><code>S</code></strong>, <strong><code>phase_factors</code></strong>, <strong><code>r</code></strong>, <strong><code>r_min</code></strong>, <strong><code>MY</code></strong>, <strong><code>MX</code></strong>)</p>
 </blockquote>
 <p>Fastest version, takes precomputed phase factors, assumes S-matrix with beam tilt included</p>
 <p>:param S:               B x NY x NX
@@ -126,7 +389,7 @@ nb_path: "nbs/30_operators.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="A_fast_full3" class="doc_header"><code>A_fast_full3</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L80" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>A_fast_full3</code>(<strong><code>S</code></strong>, <strong><code>phase_factors</code></strong>, <strong><code>r</code></strong>, <strong><code>r_min</code></strong>, <strong><code>MY</code></strong>, <strong><code>MX</code></strong>)</p>
+<h4 id="A_fast_full3" class="doc_header"><code>A_fast_full3</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L208" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>A_fast_full3</code>(<strong><code>S</code></strong>, <strong><code>phase_factors</code></strong>, <strong><code>r</code></strong>, <strong><code>r_min</code></strong>, <strong><code>MY</code></strong>, <strong><code>MX</code></strong>)</p>
 </blockquote>
 <p>Fastest version, takes precomputed phase factors, assumes S-matrix with beam tilt included</p>
 <p>:param S:               B x NY x NX
@@ -156,7 +419,7 @@ nb_path: "nbs/30_operators.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="A_fast_full5" class="doc_header"><code>A_fast_full5</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L121" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>A_fast_full5</code>(<strong><code>S</code></strong>, <strong><code>phase_factors</code></strong>, <strong><code>r</code></strong>, <strong><code>r_min</code></strong>, <strong><code>MY</code></strong>, <strong><code>MX</code></strong>)</p>
+<h4 id="A_fast_full5" class="doc_header"><code>A_fast_full5</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L249" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>A_fast_full5</code>(<strong><code>S</code></strong>, <strong><code>phase_factors</code></strong>, <strong><code>r</code></strong>, <strong><code>r_min</code></strong>, <strong><code>MY</code></strong>, <strong><code>MX</code></strong>)</p>
 </blockquote>
 <p>Fastest version, takes precomputed phase factors, assumes S-matrix with beam tilt included</p>
 <p>:param S:               B x NY x NX
@@ -186,7 +449,7 @@ nb_path: "nbs/30_operators.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="A_fast_full4" class="doc_header"><code>A_fast_full4</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L161" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>A_fast_full4</code>(<strong><code>S</code></strong>, <strong><code>phase_factors</code></strong>, <strong><code>r</code></strong>, <strong><code>r_min</code></strong>, <strong><code>out</code></strong>=<em><code>None</code></em>, <strong><code>Mx</code></strong>=<em><code>0</code></em>, <strong><code>My</code></strong>=<em><code>0</code></em>)</p>
+<h4 id="A_fast_full4" class="doc_header"><code>A_fast_full4</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L289" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>A_fast_full4</code>(<strong><code>S</code></strong>, <strong><code>phase_factors</code></strong>, <strong><code>r</code></strong>, <strong><code>r_min</code></strong>, <strong><code>out</code></strong>=<em><code>None</code></em>, <strong><code>Mx</code></strong>=<em><code>0</code></em>, <strong><code>My</code></strong>=<em><code>0</code></em>)</p>
 </blockquote>
 <p>Fastest version, takes precomputed phase factors, assumes S-matrix with beam tilt included</p>
 <p>:param S:               B x NY x NX
@@ -223,7 +486,7 @@ nb_path: "nbs/30_operators.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AH_S" class="doc_header"><code>AH_S</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L190" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AH_S</code>(<strong><code>z</code></strong>, <strong><code>Psi</code></strong>, <strong><code>r</code></strong>, <strong><code>r_min</code></strong>, <strong><code>out</code></strong>=<em><code>None</code></em>, <strong><code>tau</code></strong>=<em><code>tensor([1.])</code></em>, <strong><code>Ny</code></strong>=<em><code>-1</code></em>, <strong><code>Nx</code></strong>=<em><code>-1</code></em>)</p>
+<h4 id="AH_S" class="doc_header"><code>AH_S</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L318" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AH_S</code>(<strong><code>z</code></strong>, <strong><code>Psi</code></strong>, <strong><code>r</code></strong>, <strong><code>r_min</code></strong>, <strong><code>out</code></strong>=<em><code>None</code></em>, <strong><code>tau</code></strong>=<em><code>tensor([1.])</code></em>, <strong><code>Ny</code></strong>=<em><code>-1</code></em>, <strong><code>Nx</code></strong>=<em><code>-1</code></em>)</p>
 </blockquote>
 <p>Adjoint S-matrix operator for the full S-matrix. Expects pre-computed phase-factors as inputs.</p>
 <p>:param z:               D x K x My x Mx
@@ -263,7 +526,7 @@ nb_path: "nbs/30_operators.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="smatrix_phase_factorsBDK" class="doc_header"><code>smatrix_phase_factorsBDK</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L231" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>smatrix_phase_factorsBDK</code>(<strong><code>Psi</code></strong>, <strong><code>r</code></strong>, <strong><code>take_beams</code></strong>, <strong><code>q</code></strong>, <strong><code>B</code></strong>, <strong><code>out</code></strong>=<em><code>None</code></em>)</p>
+<h4 id="smatrix_phase_factorsBDK" class="doc_header"><code>smatrix_phase_factorsBDK</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L359" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>smatrix_phase_factorsBDK</code>(<strong><code>Psi</code></strong>, <strong><code>r</code></strong>, <strong><code>take_beams</code></strong>, <strong><code>q</code></strong>, <strong><code>B</code></strong>, <strong><code>out</code></strong>=<em><code>None</code></em>)</p>
 </blockquote>
 <p>Abbreviations:
 B: number of (input) beams in S-matrix
@@ -306,7 +569,7 @@ NY/NX: S-matrix shape</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="smatrix_phase_factorsKB" class="doc_header"><code>smatrix_phase_factorsKB</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L267" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>smatrix_phase_factorsKB</code>(<strong><code>Psi</code></strong>, <strong><code>r</code></strong>, <strong><code>take_beams</code></strong>, <strong><code>q</code></strong>, <strong><code>q_indices</code></strong>, <strong><code>B</code></strong>, <strong><code>out</code></strong>=<em><code>None</code></em>)</p>
+<h4 id="smatrix_phase_factorsKB" class="doc_header"><code>smatrix_phase_factorsKB</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/operators.py#L395" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>smatrix_phase_factorsKB</code>(<strong><code>Psi</code></strong>, <strong><code>r</code></strong>, <strong><code>take_beams</code></strong>, <strong><code>q</code></strong>, <strong><code>q_indices</code></strong>, <strong><code>B</code></strong>, <strong><code>out</code></strong>=<em><code>None</code></em>)</p>
 </blockquote>
 <p>Abbreviations:
 B: number of (input) beams in S-matrix

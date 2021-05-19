@@ -5,8 +5,8 @@ __all__ = ['fftshift_checkerboard', 'cartesian_aberrations', 'memory_mb', 'memor
            'format_standard_param', 'asParam', 'make_default', 'PARAM_PREFIX', 'single_sideband_reconstruction',
            'single_sideband_kernel', 'sector_mask', 'wavelength', 'DOF', 'dense_to_sparse_kernel',
            'advanced_raster_scan', 'advanced_raster_scan', 'get_qx_qy_1D', 'get_qx_qy_2D', 'scatter_add_patches',
-           'gather_patches', 'array_split_divpoints_ntotal', 'array_split_divpoints', 'HSV_to_RGB', 'P1A_to_HSV',
-           'imsave', 'plot_complex_multi', 'plot', 'zplot', 'plotAbsAngle', 'center_of_mass_kernel',
+           'gather_patches', 'array_split_divpoints', 'HSV_to_RGB', 'P1A_to_HSV', 'imsave', 'plot_complex_multi',
+           'plot', 'zplot', 'plotAbsAngle', 'array_split_divpoints_ntotal', 'center_of_mass_kernel',
            'sparse_to_dense_datacube_kernel_crop', 'sparse_to_dense_datacube_crop',
            'sparse_to_dense_datacube_crop_gain_mask_kernel', 'sparse_to_dense_datacube_crop_gain_mask',
            'fftshift_kernel', 'fftshift_pad_kernel', 'virtual_annular_image_kernel',
@@ -16,7 +16,10 @@ __all__ = ['fftshift_checkerboard', 'cartesian_aberrations', 'memory_mb', 'memor
            'cartesian_aberrations_single', 'cartesian_aberrations', 'aperture', 'ZernikeProbe2', 'ZernikeProbeSingle',
            'ZernikeProbe', 'sdebug', 'h5write', 'h5append', 'h5read', 'h5info', 'h5options', 'prox_D_gaussian_kernel',
            'prox_D_gaussian', 'gradz_poisson_sparse_kernel', 'gradz_poisson_sparse', 'gradz_gaussian_sparse_kernel',
-           'gradz_gaussian_sparse', 'sparse_amplitude_loss_kernel', 'sparse_amplitude_loss']
+           'gradz_gaussian_sparse', 'sparse_amplitude_loss_kernel', 'sparse_amplitude_loss',
+           'sparse_smooth_truncated_amplitude_loss_kernel', 'sparse_smooth_truncated_amplitude_loss',
+           'sparse_smooth_truncated_amplitude_prox_kernel', 'sparse_smooth_truncated_amplitude_prox',
+           'sparse_amplitude_prox_kernel', 'sparse_amplitude_prox']
 
 # Cell
 from numpy.fft import fftfreq
@@ -945,45 +948,7 @@ def gather_patches(input, axes, positions, patch_size, out=None) -> th.Tensor:
     out = out.view(out_view)
     return out
 
-# Cell
 
-def array_split_divpoints_ntotal(Ntotal, indices_or_sections):
-    """
-    Split an array into multiple sub-arrays.
-    Please refer to the ``split`` documentation.  The only difference
-    between these functions is that ``array_split`` allows
-    `indices_or_sections` to be an integer that does *not* equally
-    divide the axis. For an array of length l that should be split
-    into n sections, it returns l % n sub-arrays of size l//n + 1
-    and the rest of size l//n.
-    See Also
-    --------
-    split : Split array into multiple sub-arrays of equal size.
-    Examples
-    --------
-    >>> x = np.arange(8.0)
-    >>> np.array_split(x, 3)
-        [array([0.,  1.,  2.]), array([3.,  4.,  5.]), array([6.,  7.])]
-    >>> x = np.arange(7.0)
-    >>> np.array_split(x, 3)
-        [array([0.,  1.,  2.]), array([3.,  4.]), array([5.,  6.])]
-    """
-    try:
-        # handle array case.
-        Nsections = len(indices_or_sections) + 1
-        div_points = [0] + list(indices_or_sections) + [Ntotal]
-    except TypeError:
-        # indices_or_sections is a scalar, not an array.
-        Nsections = int(indices_or_sections)
-        if Nsections <= 0:
-            raise ValueError('number sections must be larger than 0.')
-        Neach_section, extras = divmod(Ntotal, Nsections)
-        section_sizes = ([0] +
-                         extras * [Neach_section + 1] +
-                         (Nsections - extras) * [Neach_section])
-        div_points = np.array(section_sizes, dtype=np.intp).cumsum()
-
-    return div_points
 
 # Cell
 def array_split_divpoints(ary, indices_or_sections, axis=0):
@@ -1240,6 +1205,46 @@ def plotAbsAngle(img, suptitle='Image', savePath=None, cmap=['gray', 'gray'], ti
     zplot([np.abs(img), np.angle(img)], suptitle, savePath, cmap, title, show, figsize, scale)
 
 # Cell
+
+def array_split_divpoints_ntotal(Ntotal, indices_or_sections):
+    """
+    Split an array into multiple sub-arrays.
+    Please refer to the ``split`` documentation.  The only difference
+    between these functions is that ``array_split`` allows
+    `indices_or_sections` to be an integer that does *not* equally
+    divide the axis. For an array of length l that should be split
+    into n sections, it returns l % n sub-arrays of size l//n + 1
+    and the rest of size l//n.
+    See Also
+    --------
+    split : Split array into multiple sub-arrays of equal size.
+    Examples
+    --------
+    >>> x = np.arange(8.0)
+    >>> np.array_split(x, 3)
+        [array([0.,  1.,  2.]), array([3.,  4.,  5.]), array([6.,  7.])]
+    >>> x = np.arange(7.0)
+    >>> np.array_split(x, 3)
+        [array([0.,  1.,  2.]), array([3.,  4.]), array([5.,  6.])]
+    """
+    try:
+        # handle array case.
+        Nsections = len(indices_or_sections) + 1
+        div_points = [0] + list(indices_or_sections) + [Ntotal]
+    except TypeError:
+        # indices_or_sections is a scalar, not an array.
+        Nsections = int(indices_or_sections)
+        if Nsections <= 0:
+            raise ValueError('number sections must be larger than 0.')
+        Neach_section, extras = divmod(Ntotal, Nsections)
+        section_sizes = ([0] +
+                         extras * [Neach_section + 1] +
+                         (Nsections - extras) * [Neach_section])
+        div_points = np.array(section_sizes, dtype=np.intp).cumsum()
+
+    return div_points
+
+# Cell
 import numpy as np
 import torch as th
 import sigpy as sp
@@ -1328,8 +1333,9 @@ def sparse_to_dense_datacube_crop_gain_mask_kernel(dc, frames, counts,
 
 # Cell
 
-def sparse_to_dense_datacube_crop_gain_mask(indices, counts, scan_dimensions, frame_dimensions, center_data, radius_data,
-                                            radius_max, binning=1, fftshift=False):
+def sparse_to_dense_datacube_crop_gain_mask(indices, counts, scan_dimensions, frame_dimensions, center_data,
+                                            radius_data,
+                                            radius_max, n_batches=4, binning=1, fftshift=False):
     radius_data_int = int(np.ceil(radius_data / binning) * binning)
     radius_max_int = int(np.ceil(radius_max / binning) * binning)
     frame_size = 2 * radius_max_int // binning
@@ -1340,36 +1346,29 @@ def sparse_to_dense_datacube_crop_gain_mask(indices, counts, scan_dimensions, fr
     dev = th.device('cuda:1')
     stream = th.cuda.current_stream().cuda_stream
 
-    dc0 = np.zeros((scan_dimensions[0],scan_dimensions[1], frame_size, frame_size), dtype=np.uint8)
-    dc = th.zeros((scan_dimensions[0]//2,scan_dimensions[1], frame_size, frame_size), dtype=th.float32, device=dev)
+    K = indices.shape[0]
+    divpts = array_split_divpoints_ntotal(K, n_batches)
+    K_batch = [divpts[i] - divpts[i - 1] for i in range(1, n_batches + 1)]
+    dc0 = np.zeros((scan_dimensions[0], scan_dimensions[1], frame_size, frame_size), dtype=np.uint8)
 
-    center_frame = th.tensor([frame_size // 2, frame_size // 2], device=dev)
-    fd = th.as_tensor(frame_dimensions, device=dev)
-    center = th.as_tensor(center_data, device=dev)
-    inds = th.as_tensor(indices[:scan_dimensions[0]//2,...], device=dev)
-    cts = th.as_tensor(counts[:scan_dimensions[0]//2,...].astype(np.float32), dtype=th.float32, device=dev)
+    for b in range(n_batches):
+        dc = th.zeros((K_batch[b], scan_dimensions[1], frame_size, frame_size), dtype=th.float32, device=dev)
 
-    threadsperblock = (16, 16)
-    blockspergrid = tuple(np.ceil(np.array(indices.shape[:2]) / threadsperblock).astype(np.int))
-# sparse_to_dense_datacube_crop_gain_mask dtypes: int16 uint32 int16 int64
-    print('sparse_to_dense_datacube_crop_gain_mask dtypes:',dc.dtype, inds.dtype, cts.dtype, frame_dimensions.dtype)
+        center_frame = th.tensor([frame_size // 2, frame_size // 2], device=dev)
+        fd = th.as_tensor(frame_dimensions, device=dev)
+        center = th.as_tensor(center_data, device=dev)
+        inds = th.as_tensor(indices[divpts[b]:divpts[b + 1], ...], device=dev)
+        cts = th.as_tensor(counts[divpts[b]:divpts[b + 1], ...].astype(np.float32), dtype=th.float32, device=dev)
 
-    sparse_to_dense_datacube_crop_gain_mask_kernel[blockspergrid, threadsperblock, stream](dc, inds, cts, fd,
-                                                                                   center_frame, center,
-                                                                                   radius_data_int, binning,
-                                                                                   fftshift)
+        threadsperblock = (16, 16)
+        blockspergrid = tuple(np.ceil(np.array(indices.shape[:2]) / threadsperblock).astype(np.int))
+        print(f'batch {b}: dtypes:', dc.dtype, inds.dtype, cts.dtype, frame_dimensions.dtype)
+        sparse_to_dense_datacube_crop_gain_mask_kernel[blockspergrid, threadsperblock, stream](dc, inds, cts, fd,
+                                                                                               center_frame, center,
+                                                                                               radius_data_int, binning,
+                                                                                               fftshift)
+        dc0[divpts[b]:divpts[b + 1], ...] = dc.cpu().type(th.uint8).numpy()
 
-    dc0[:scan_dimensions[0]//2,...] = dc.cpu().type(th.uint8).numpy()
-
-    dc[:] = 0
-    inds = th.as_tensor(indices[scan_dimensions[0]//2:,...], device=dev)
-    cts = th.as_tensor(counts[scan_dimensions[0]//2:,...].astype(np.float32), dtype=th.float32, device=dev)
-
-    sparse_to_dense_datacube_crop_gain_mask_kernel[blockspergrid, threadsperblock, stream](dc, inds, cts, fd,
-                                                                                   center_frame, center,
-                                                                                   radius_data_int, binning,
-                                                                                   fftshift)
-    dc0[scan_dimensions[0]//2:,...] = dc.cpu().type(th.uint8).numpy()
     cuda.select_device(0)
     return dc0
 
@@ -2978,8 +2977,6 @@ import numpy as np
 from numba import cuda
 
 
-
-
 @cuda.jit
 def sparse_amplitude_loss_kernel(a_model, indices_target, counts_target, loss, grad, frame_dimensions,
                                  no_count_indicator):
@@ -3013,4 +3010,158 @@ def sparse_amplitude_loss(a_model, indices_target, counts_target, frame_dimensio
     sparse_amplitude_loss_kernel[blockspergrid, threadsperblock](a_model.detach(), indices_target.detach(),
                                                                  counts_target.detach(), loss.detach(), grad.detach(),
                                                                  frame_dimensions, no_count_indicator)
+    return loss, grad
+
+import math as m
+import cmath as cm
+@cuda.jit
+def sparse_smooth_truncated_amplitude_loss_kernel(a_model, indices_target, counts_target, loss, grad, no_count_indicator, eps):
+    n = cuda.grid(1)
+    K, MY, MX = a_model.shape
+    N = K * MY * MX
+
+    k = n // (MY * MX)
+    my = (n - k * (MY * MX)) // MX
+    mx = (n - k * (MY * MX) - my * MX)
+
+    if n < N:
+        idx1d = mx + my * MX
+        a_measure = 0
+        a_model = a_model[k, my, mx]
+        for i in range(indices_target.shape[1]):
+            if indices_target[k, i] == idx1d and no_count_indicator != indices_target[k, i]:
+                a_measure = m.sqrt(counts_target[k, i])
+
+        if a_model < eps * a_measure:
+            grad[k, my, mx] =  (1-1/eps)
+            loss_k = (1-eps)/2*(a_measure**2-(1/eps)*a_model**2)
+        else:
+            grad[k, my, mx] =  1 - (a_measure/a_model)
+            loss_k = .5 * abs(a_model - a_measure)**2
+        loss[k] = loss_k
+        # cuda.atomic.add(loss, (k), loss_k)
+
+
+def sparse_smooth_truncated_amplitude_loss(a_model, indices_target, counts_target, frame_dimensions, eps=0.1):
+    """
+    Smooth truncated amplitude loss from Chang et al., Overlapping Domain Decomposition Methods for Ptychographic Imaging, (2020)
+
+    :param a_model:             K x M1 x M2
+    :param indices_target:      K x num_max_counts
+    :param counts_target:       K x num_max_counts
+    :param frame_dimensions:    2
+    :return: loss (K,), grad (K x M1 x M2)
+    """
+
+    threadsperblock = (256,)
+    blockspergrid = tuple(np.ceil(np.array(np.prod(a_model.shape)) / threadsperblock).astype(np.int))
+
+    loss = th.zeros((a_model.shape[0],), device=a_model.device, dtype=th.float32)
+    grad = th.ones_like(a_model)
+    no_count_indicator = th.iinfo(indices_target.dtype).max
+
+    sparse_smooth_truncated_amplitude_loss_kernel[blockspergrid, threadsperblock](a_model.detach(), indices_target.detach(),
+                                                                 counts_target.detach(), loss.detach(), grad.detach(),
+                                                                 no_count_indicator, eps)
+    return loss, grad
+
+@cuda.jit
+def sparse_smooth_truncated_amplitude_prox_kernel(a_model, indices_target, counts_target, loss, grad, no_count_indicator, eps, lam):
+    n = cuda.grid(1)
+    K, MY, MX = a_model.shape
+    N = K * MY * MX
+
+    k = n // (MY * MX)
+    my = (n - k * (MY * MX)) // MX
+    mx = (n - k * (MY * MX) - my * MX)
+
+    if n < N:
+        idx1d = mx + my * MX
+        a_measure = 0
+        a_model = a_model[k, my, mx]
+        for i in range(indices_target.shape[1]):
+            if indices_target[k, i] == idx1d and no_count_indicator != indices_target[k, i]:
+                a_measure = m.sqrt(counts_target[k, i])
+
+        # if a_model < eps * a_measure:
+        #     grad[k, my, mx] =  max(0, lam * a_measure/(lam-((1-eps)/eps)))/ a_model
+        #     loss_k = (1-eps)/2*(a_measure**2-(1/eps)*a_model**2)
+        # else:
+        #     grad[k, my, mx] =  ((a_measure+lam * a_model)/(1+lam))/ a_model
+        #     loss_k = .5 * abs(a_model - a_measure)**2
+
+        grad[k, my, mx] =  a_measure/ a_model
+        loss_k = .5 * abs(a_model - a_measure)**2
+
+        loss[k] = loss_k
+
+
+def sparse_smooth_truncated_amplitude_prox(a_model, indices_target, counts_target, frame_dimensions, eps=0.5, lam=6e-1):
+    """
+    Smooth truncated amplitude loss from Chang et al., Overlapping Domain Decomposition Methods for Ptychographic Imaging, (2020)
+
+    :param a_model:             K x M1 x M2
+    :param indices_target:      K x num_max_counts
+    :param counts_target:       K x num_max_counts
+    :param frame_dimensions:    2
+    :return: loss (K,), grad (K x M1 x M2)
+    """
+
+    threadsperblock = (256,)
+    blockspergrid = tuple(np.ceil(np.array(np.prod(a_model.shape)) / threadsperblock).astype(np.int))
+
+    loss = th.zeros((a_model.shape[0],), device=a_model.device, dtype=th.float32)
+    grad = th.ones_like(a_model)
+    no_count_indicator = th.iinfo(indices_target.dtype).max
+
+    sparse_smooth_truncated_amplitude_prox_kernel[blockspergrid, threadsperblock](a_model.detach(), indices_target.detach(),
+                                                                 counts_target.detach(), loss.detach(), grad.detach(),
+                                                                 no_count_indicator, eps, lam)
+    return loss, grad
+
+@cuda.jit
+def sparse_amplitude_prox_kernel(a_model, indices_target, counts_target, loss, grad, no_count_indicator, eps, lam):
+    n = cuda.grid(1)
+    K, MY, MX = a_model.shape
+    N = K * MY * MX
+
+    k = n // (MY * MX)
+    my = (n - k * (MY * MX)) // MX
+    mx = (n - k * (MY * MX) - my * MX)
+
+    if n < N:
+        idx1d = mx + my * MX
+        a_measure = 0
+        a_model = a_model[k, my, mx]
+        for i in range(indices_target.shape[1]):
+            if indices_target[k, i] == idx1d and no_count_indicator != indices_target[k, i]:
+                a_measure = m.sqrt(counts_target[k, i])
+
+        grad[k, my, mx] =  a_measure/ a_model
+        loss_k = .5 * abs(a_model - a_measure)**2
+
+        loss[k] = loss_k
+
+
+def sparse_amplitude_prox(a_model, indices_target, counts_target, frame_dimensions, eps=0.5, lam=6e-1):
+    """
+    Smooth truncated amplitude loss from Chang et al., Overlapping Domain Decomposition Methods for Ptychographic Imaging, (2020)
+
+    :param a_model:             K x M1 x M2
+    :param indices_target:      K x num_max_counts
+    :param counts_target:       K x num_max_counts
+    :param frame_dimensions:    2
+    :return: loss (K,), grad (K x M1 x M2)
+    """
+
+    threadsperblock = (256,)
+    blockspergrid = tuple(np.ceil(np.array(np.prod(a_model.shape)) / threadsperblock).astype(np.int))
+
+    loss = th.zeros((a_model.shape[0],), device=a_model.device, dtype=th.float32)
+    grad = th.ones_like(a_model)
+    no_count_indicator = th.iinfo(indices_target.dtype).max
+
+    sparse_amplitude_prox_kernel[blockspergrid, threadsperblock](a_model.detach(), indices_target.detach(),
+                                                                 counts_target.detach(), loss.detach(), grad.detach(),
+                                                                 no_count_indicator, eps, lam)
     return loss, grad

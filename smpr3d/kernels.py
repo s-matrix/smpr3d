@@ -3,7 +3,7 @@
 __all__ = ['smatrix_forward_kernel', 'smatrix_backward_kernel_S', 'phase_factor_kernelDBK', 'phase_factor_kernelKB',
            'smatrix_forward_kernel_fast_full4', 'split_kernel', 'split_kernel4', 'split_kernel5', 'split_kernel2',
            'split_kernel3', 'overlap_kernel_real2', 'psi_denom_kernel', 'psi_kernel', 'A_realspace_kernel',
-           'AtF2_kernel']
+           'AtF2_kernel', 'dS_kernel']
 
 # Cell
 import numba.cuda as cuda
@@ -462,3 +462,35 @@ def AtF2_kernel(z, psi, r, out):
         cuda.atomic.add(out.imag, (bb, y + my, x + mx), val.imag)
 
 # Cell
+@cuda.jit
+def dS_kernel(z, z_old, psi, psi_int, psi_int_max, alpha, r, out):
+    """
+    :param z:           K x MY x MX
+    :param z_old:       K x MY x MX
+    :param psi:         B x K x MY x MX
+    :param psi_int:     B x K x MY x MX
+    :param psi_int_max: B x K
+    :param r:           K x 2
+    :param out:         B x NY x NX
+    :param alpha:       float
+    """
+
+    n = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
+    B, K, MY, MX = psi.shape
+    N = B * K * MY * MX
+
+    bb = (n // (MY * MX * K))
+    k = (n - bb * (MY * MX * K)) // (MY * MX)
+    my = (n - bb * (MY * MX * K) - k * (MY * MX)) // MX
+    mx = (n - bb * (MY * MX * K) - k * (MY * MX) - my * MX)
+
+    if n < N:
+        y = r[k, 0]
+        x = r[k, 1]
+
+        denom = (1-alpha)*psi_int[bb, k, my, mx] + alpha * psi_int_max[bb, k]
+        val = (psi[bb, k, my, mx].conjugate() * (z[k, my, mx] )) / denom
+        # val = (psi[bb, k, my, mx].conjugate() * (z[k, my, mx]))
+        # - z_old[k, my, mx]
+        cuda.atomic.add(out, (bb, y + my, x + mx,0), val.real)
+        cuda.atomic.add(out, (bb, y + my, x + mx,1), val.imag)
