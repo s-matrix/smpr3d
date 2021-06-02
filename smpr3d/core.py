@@ -145,7 +145,7 @@ class Sparse4DData:
         self.frame_dimensions = None
 
     @staticmethod
-    def from_4Dcamera_file(filename):
+    def from_4Dcamera_file(filename, slice=None):
         with h5py.File(filename, 'r') as f0:
             frames = f0['electron_events/frames'][:]
             scan_dimensions = (f0['electron_events/scan_positions'].attrs['Ny'],
@@ -171,6 +171,8 @@ class Sparse4DData:
 
         d = Sparse4DData()
         d.indices = np.ascontiguousarray(make_unragged_frames(frames.ravel(), scan_dimensions))
+        if slice is not None:
+            d.indices = d.indices[slice]
         d.scan_dimensions = np.array(d.indices.shape[:2])
         d.frame_dimensions = frame_dimensions
         d.counts = np.zeros(d.indices.shape, dtype=np.bool)
