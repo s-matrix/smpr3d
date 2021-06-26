@@ -64,3 +64,4 @@ plugins:
     
 remote_theme: fastai/nbdev-jekyll-theme
 baseurl: /smpr3d/
+theme: jekyll-theme-cayman
