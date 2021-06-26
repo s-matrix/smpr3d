@@ -63,7 +63,7 @@ A fabulous idea
 
 ## References
 
-Pelz, P. M. et al. Reconstructing the Scattering Matrix from Scanning Electron Diffraction Measurements Alone. (2020)., `doi <https://arxiv.org/abs/2008.12768v1>`
+[Pelz, P. M. et al. Phase-contrast imaging of multiply-scattering extended objects at atomic resolution by reconstruction of the scattering matrix. (2021).](https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.3.023159)
 
 Brown, H. G. et al. A three-dimensional reconstruction algorithm for scanning transmission electron microscopy data from thick samples. `doi <http://arxiv.org/abs/2011.07652>`
 

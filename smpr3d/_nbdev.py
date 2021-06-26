@@ -136,7 +136,7 @@ modules = ["torch_imports.py",
            "operators.py",
            "kernels.py"]
 
-doc_url = "https://philipppelz.github.io//smpr3d/"
+doc_url = "https://s-matrix.github.io/smpr3d//smpr3d/"
 
 git_url = "https://github.com/s-matrix/smpr3d/tree/master/"
 

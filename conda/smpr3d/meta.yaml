@@ -1,0 +1,52 @@
+package:
+  name: smpr3d
+  version: 0.0.3
+source:
+  sha256: 16990c561a8cf845fbab8d4bdac94e017d9447aef43732139737b64932ebf954
+  url: https://files.pythonhosted.org/packages/bf/2c/cccdfa7cb9bb4084be82a0ca5ad70cc76f57af65e1238c6655de75540dce/smpr3d-0.0.3.tar.gz
+about:
+  dev_url: https://s-matrix.github.io/smpr3d/
+  doc_url: https://s-matrix.github.io/smpr3d/
+  home: https://s-matrix.github.io/smpr3d/
+  license: Apache Software
+  license_family: APACHE
+  summary: smpr3d is a toolkit for 3D reconstruction from scanning diffraction data
+build:
+  noarch: python
+  number: '0'
+  script: '{{ PYTHON }} -m pip install . -vv'
+extra:
+  recipe-maintainers:
+  - s-matrix
+requirements:
+  host:
+  - pip
+  - python
+  - packaging
+  - torchvision
+  - psutil
+  - matplotlib
+  - tifffile
+  - jupyterlab
+  - ipympl
+  - ipywidgets
+  - scikit-image
+  - numba
+  - tensorboard
+  run:
+  - pip
+  - python
+  - packaging
+  - torchvision
+  - psutil
+  - matplotlib
+  - tifffile
+  - jupyterlab
+  - ipympl
+  - ipywidgets
+  - scikit-image
+  - numba
+  - tensorboard
+test:
+  imports:
+  - smpr3d
