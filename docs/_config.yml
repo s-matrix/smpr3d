@@ -2,7 +2,7 @@ repository: s-matrix/smpr3d
 output: web
 topnav_title: smpr3d
 site_title: smpr3d
-company_name: Put your copyright information here
+company_name: Philipp Pelz
 description: smpr3d is a toolkit for 3D reconstruction from scanning diffraction data
 # Set to false to disable KaTeX math
 use_math: true
@@ -11,9 +11,6 @@ google_analytics:
 # See http://nbdev.fast.ai/search for help with adding Search
 google_search:
 
-default_badges:
-  colab: true
-  
 host: 127.0.0.1
 # the preview server used. Leave as is.
 port: 4000
@@ -67,4 +64,3 @@ plugins:
     
 remote_theme: fastai/nbdev-jekyll-theme
 baseurl: /smpr3d/
-theme: jekyll-theme-cayman

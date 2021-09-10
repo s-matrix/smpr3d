@@ -5,21 +5,24 @@ __all__ = ['array_split_divpoints_ntotal', 'fftshift_checkerboard', 'cartesian_a
            'validate_standard_param', 'format_standard_param', 'asParam', 'make_default', 'PARAM_PREFIX',
            'single_sideband_reconstruction', 'single_sideband_kernel', 'sector_mask', 'wavelength', 'DOF',
            'dense_to_sparse_kernel', 'advanced_raster_scan', 'advanced_raster_scan', 'get_qx_qy_1D', 'get_qx_qy_2D',
-           'scatter_add_patches', 'gather_patches', 'array_split_divpoints', 'HSV_to_RGB', 'P1A_to_HSV', 'imsave',
-           'plot_complex_multi', 'plot', 'zplot', 'plotAbsAngle', 'center_of_mass_kernel',
+           'scatter_add_patches', 'gather_patches', 'array_split_divpoints', 'show3DStack', 'compare3DStack',
+           'compare4DStack', 'generate_grid_1d', 'generate_grid_2d', 'ImageRotation', 'MAX_DIM', 'HSV_to_RGB',
+           'P1A_to_HSV', 'imsave', 'plot_complex_multi', 'plot', 'zplot', 'plotAbsAngle', 'center_of_mass_kernel',
            'sparse_to_dense_datacube_kernel_crop', 'sparse_to_dense_datacube_crop',
            'sparse_to_dense_datacube_crop_gain_mask_kernel', 'sparse_to_dense_datacube_crop_gain_mask',
            'fftshift_kernel', 'fftshift_pad_kernel', 'virtual_annular_image_kernel',
            'crop_symmetric_around_center_kernel', 'crop_symmetric_around_center', 'rotate_kernel', 'rotate',
            'sum_kernel', 'sum_frames', 'rebin_kernel', 'disk_overlap_function', 'disk_overlap_kernel',
-           'double_overlap_intensitities_in_range', 'find_rotation_angle_with_double_disk_overlap',
+           'double_overlap_intensitities_in_range', 'find_rotation_angle_with_double_disk_overlap', 'convolve_kernel',
            'cartesian_aberrations_single', 'cartesian_aberrations', 'aperture', 'ZernikeProbe2', 'ZernikeProbeSingle',
-           'ZernikeProbe', 'sdebug', 'h5write', 'h5append', 'h5read', 'h5info', 'h5options', 'prox_D_gaussian_kernel',
-           'prox_D_gaussian', 'gradz_poisson_sparse_kernel', 'gradz_poisson_sparse', 'gradz_gaussian_sparse_kernel',
-           'gradz_gaussian_sparse', 'sparse_amplitude_loss_kernel', 'sparse_amplitude_loss',
-           'sparse_smooth_truncated_amplitude_loss_kernel', 'sparse_smooth_truncated_amplitude_loss',
-           'sparse_smooth_truncated_amplitude_prox_kernel', 'sparse_smooth_truncated_amplitude_prox',
-           'sparse_amplitude_prox_kernel', 'sparse_amplitude_prox']
+           'ZernikeProbe', 'generate_hard_pupil', 'generate_angular_spectrum_kernel', 'Pupil', 'sdebug', 'h5write',
+           'h5append', 'h5read', 'h5info', 'h5options', 'ImageTransformOpticalFlow', 'is_correlation_method',
+           'is_valid_method', 'ImageShiftCorrelationBased', 'ImageShiftGradientBased', 'possible_methods',
+           'correlation_methods', 'prox_D_gaussian_kernel', 'prox_D_gaussian', 'gradz_poisson_sparse_kernel',
+           'gradz_poisson_sparse', 'gradz_gaussian_sparse_kernel', 'gradz_gaussian_sparse',
+           'sparse_amplitude_loss_kernel', 'sparse_amplitude_loss', 'sparse_smooth_truncated_amplitude_loss_kernel',
+           'sparse_smooth_truncated_amplitude_loss', 'sparse_smooth_truncated_amplitude_prox_kernel',
+           'sparse_smooth_truncated_amplitude_prox', 'sparse_amplitude_prox_kernel', 'sparse_amplitude_prox']
 
 # Cell
 from numpy.fft import fftfreq
@@ -1042,6 +1045,378 @@ from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 import matplotlib.font_manager as fm
 import numpy as np
 from PIL import Image
+from matplotlib.widgets import Slider
+import smpr3d.operators as op
+import torch as th
+
+MAX_DIM = 512*512*850
+
+def show3DStack(image_3d, axis = 2, cmap = "gray", clim = None, extent = (0, 1, 0, 1)):
+    if clim is None:
+        clim = (np.min(image_3d), np.max(image_3d))
+    if axis == 0:
+        image  = lambda index: image_3d[index, :, :]
+    elif axis == 1:
+        image  = lambda index: image_3d[:, index, :]
+    else:
+        image  = lambda index: image_3d[:, :, index]
+
+    current_idx= 0
+    _, ax      = plt.subplots(1, 1, figsize=(6.5, 5))
+    plt.subplots_adjust(left=0.15, bottom=0.15)
+    fig        = ax.imshow(image(current_idx), cmap = cmap,  clim = clim, extent = extent)
+    ax.set_title("layer: " + str(current_idx))
+    plt.colorbar(fig, ax=ax)
+    plt.axis('off')
+    ax_slider  = plt.axes([0.15, 0.1, 0.65, 0.03])
+    slider_obj = Slider(ax_slider, "layer", 0, image_3d.shape[axis]-1, valinit=current_idx, valfmt='%d')
+    def update_image(index):
+        global current_idx
+        index       = int(index)
+        current_idx = index
+        ax.set_title("layer: " + str(index))
+        fig.set_data(image(index))
+    def arrow_key(event):
+        global current_idx
+        if event.key == "left":
+            if current_idx-1 >=0:
+                current_idx -= 1
+        elif event.key == "right":
+            if current_idx+1 < image_3d.shape[axis]:
+                current_idx += 1
+        slider_obj.set_val(current_idx)
+    slider_obj.on_changed(update_image)
+    plt.gcf().canvas.mpl_connect("key_release_event", arrow_key)
+    plt.show()
+    return slider_obj
+
+def compare3DStack(stack_1, stack_2, axis = 2, cmap = "gray", clim = (0, 1), extent = (0, 1, 0, 1) , colorbar = True, flag_vertical = False):
+    assert stack_1.shape == stack_2.shape, "shape of two input stacks should be the same!"
+
+    if axis == 0:
+        image_1  = lambda index: stack_1[index, :, :]
+        image_2  = lambda index: stack_2[index, :, :]
+    elif axis == 1:
+        image_1  = lambda index: stack_1[:, index, :]
+        image_2  = lambda index: stack_2[:, index, :]
+    else:
+        image_1  = lambda index: stack_1[:, :, index]
+        image_2  = lambda index: stack_2[:, :, index]
+
+    current_idx  = 0
+    if flag_vertical:
+        _, ax        = plt.subplots(2, 1, figsize=(10, 2.5), sharex = 'all', sharey = 'all')
+    else:
+        _, ax        = plt.subplots(1, 2, figsize=(9, 5), sharex = 'all', sharey = 'all')
+    plt.subplots_adjust(left=0.15, bottom=0.15)
+    fig_1        = ax[0].imshow(image_1(current_idx), cmap = cmap,  clim = clim, extent = extent)
+    ax[0].axis("off")
+    ax[0].set_title("stack 1, layer: " + str(current_idx))
+    if colorbar:
+        plt.colorbar(fig_1, ax = ax[0])
+    fig_2        = ax[1].imshow(image_2(current_idx), cmap = cmap,  clim = clim, extent = extent)
+    ax[1].axis("off")
+    ax[1].set_title("stack 2, layer: " + str(current_idx))
+    if colorbar:
+        plt.colorbar(fig_2, ax = ax[1])
+    ax_slider    = plt.axes([0.10, 0.05, 0.65, 0.03])
+    slider_obj   = Slider(ax_slider, 'layer', 0, stack_1.shape[axis]-1, valinit=current_idx, valfmt='%d')
+    def update_image(index):
+        global current_idx
+        index       = int(index)
+        current_idx = index
+        ax[0].set_title("stack 1, layer: " + str(index))
+        fig_1.set_data(image_1(index))
+        ax[1].set_title("stack 2, layer: " + str(index))
+        fig_2.set_data(image_2(index))
+    def arrow_key(event):
+        global current_idx
+        if event.key == "left":
+            if current_idx-1 >=0:
+                current_idx -= 1
+        elif event.key == "right":
+            if current_idx+1 < stack_1.shape[axis]:
+                current_idx += 1
+        slider_obj.set_val(current_idx)
+    slider_obj.on_changed(update_image)
+    plt.gcf().canvas.mpl_connect("key_release_event", arrow_key)
+    plt.show()
+    return slider_obj
+
+def compare4DStack(stack_1, stack_2, cmap = "gray", clim = (0, 1), extent = (0, 1, 0, 1) , colorbar = True, flag_vertical = False):
+    assert stack_1.shape == stack_2.shape, "shape of two input stacks should be the same!"
+    axis, axis2 = 2, 3
+    image_1  = lambda index: stack_1[:, :, index[0], index[1]]
+    image_2  = lambda index: stack_2[:, :, index[0], index[1]]
+
+    current_idx1, current_idx2  = 0, 0
+    if flag_vertical:
+        _, ax        = plt.subplots(2, 1, figsize=(10, 2.5), sharex = 'all', sharey = 'all')
+    else:
+        _, ax        = plt.subplots(1, 2, figsize=(9, 5), sharex = 'all', sharey = 'all')
+    plt.subplots_adjust(left=0.15, bottom=0.15)
+    fig_1        = ax[0].imshow(image_1((current_idx1,current_idx2)), cmap = cmap,  clim = clim, extent = extent)
+    ax[0].axis("off")
+    ax[0].set_title("stack 1, layer: " + str(current_idx1) + " and " + str(current_idx2))
+    if colorbar:
+        plt.colorbar(fig_1, ax = ax[0])
+    fig_2        = ax[1].imshow(image_2((current_idx1,current_idx2)), cmap = cmap,  clim = clim, extent = extent)
+    ax[1].axis("off")
+    ax[1].set_title("stack 2, layer: " + str(current_idx1) + " and " + str(current_idx2))
+    if colorbar:
+        plt.colorbar(fig_2, ax = ax[1])
+    ax_slider    = plt.axes([0.10, 0.10, 0.65, 0.03])
+    slider_obj   = Slider(ax_slider, 'layer', 0, stack_1.shape[axis]-1, valinit=current_idx1, valfmt='%d')
+    def update_image(index):
+        global current_idx1
+        global current_idx2
+        index       = int(index)
+        current_idx1 = index
+        current_idx2 = current_idx2
+        ax[0].set_title("stack 1, layer: " + str(current_idx1) + " and " + str(current_idx2))
+        fig_1.set_data(image_1((current_idx1,current_idx2)))
+        ax[1].set_title("stack 2, layer: " + str(current_idx1) + " and " + str(current_idx2))
+        fig_2.set_data(image_2((current_idx1,current_idx2)))
+    ax_slider2    = plt.axes([0.10, 0.05, 0.65, 0.03])
+    slider_obj2   = Slider(ax_slider2, 'layer', 0, stack_1.shape[axis2]-1, valinit=current_idx2, valfmt='%d')
+    def update_image2(index):
+        global current_idx1
+        global current_idx2
+        index       = int(index)
+        current_idx1= current_idx1
+        current_idx2= index
+        ax[0].set_title("stack 1, layer: " + str(current_idx1) + " and " + str(current_idx2))
+        fig_1.set_data(image_1((current_idx1,current_idx2)))
+        ax[1].set_title("stack 2, layer: " + str(current_idx1) + " and " + str(current_idx2))
+        fig_2.set_data(image_2((current_idx1,current_idx2)))
+    def arrow_key(event):
+        global current_idx1
+        global current_idx2
+        current_idx2 = current_idx2
+        if event.key == "left":
+            if current_idx1-1 >=0:
+                current_idx1 -= 1
+        elif event.key == "right":
+            if current_idx1+1 < stack_1.shape[axis]:
+                current_idx1 += 1
+        slider_obj.set_val(current_idx1)
+    slider_obj.on_changed(update_image)
+    slider_obj2.on_changed(update_image2)
+    plt.gcf().canvas.mpl_connect("key_release_event", arrow_key)
+    plt.show()
+    return slider_obj, slider_obj2
+
+
+def generate_grid_1d(shape, pixel_size = 1, flag_fourier = False, dtype = th.float32, device = th.device('cuda')):
+    """
+    This function generates 1D Fourier grid, and is centered at the middle of the array
+    Inputs:
+        shape    - length of the array
+        pixel_size      - pixel size
+    Optional parameters:
+        flag_fourier - flag indicating whether the final array is circularly shifted
+                     should be false when computing real space coordinates
+                     should be true when computing Fourier coordinates
+    Outputs:
+        x_lin       - 1D grid (real or fourier)
+
+    """
+    pixel_size = 1./pixel_size/shape if flag_fourier else pixel_size
+    x_lin = (th.arange(shape, dtype=dtype, device=device) - shape//2) * pixel_size
+    if flag_fourier:
+        x_lin = th.roll(x_lin, -1 * int(shape)//2)
+    return x_lin
+
+def generate_grid_2d(shape, pixel_size = 1, flag_fourier = False, dtype = th.float32, device = th.device('cuda')):
+    """
+    This function generates 2D Fourier grid, and is centered at the middle of the array
+    Inputs:
+        shape              - shape of the grid (number of y pixels, number of x pixels)
+        pixel_size         - pixel size
+    Optional parameters:
+        flag_fourier       - flag indicating whether the final array is circularly shifted
+                             should be false when computing real space coordinates
+                             should be true when computing Fourier coordinates
+    Outputs:
+        y_lin, x_lin       - 2D grid
+    Usage:
+        y_lin, x_lin = generate_grid_2d(...)
+
+    """
+    assert len(shape) == 2, "shape should be two dimensional!"
+    #recompute pixel size for fourier space sampling
+    y_lin  = generate_grid_1d(shape[0], pixel_size, flag_fourier = flag_fourier, dtype=dtype, device=device)
+    x_lin  = generate_grid_1d(shape[1], pixel_size, flag_fourier = flag_fourier, dtype=dtype, device=device)
+    y_lin, x_lin = th.meshgrid(y_lin, x_lin)
+    return y_lin, x_lin
+
+
+class ImageRotation:
+    """
+    A rotation class compute 3D rotation using FFT
+    """
+    def __init__(self, shape, axis = 0, pad = True, pad_value = 0, dtype = th.float32, device = th.device('cuda')):
+        self.dim       = np.array(shape)
+        self.axis      = axis
+        self.pad_value = pad_value
+        if pad:
+            self.pad_size            = np.ceil(self.dim / 2.0).astype('int')
+            self.pad_size[self.axis] = 0
+            self.dim                += 2*self.pad_size
+        else:
+            self.pad_size  = np.asarray([0,0,0])
+
+        self.dim          = [int(size) for size in self.dim]
+
+        self.range_crop_y = slice(self.pad_size[0],self.pad_size[0] + shape[0])
+        self.range_crop_x = slice(self.pad_size[1],self.pad_size[1] + shape[1])
+        self.range_crop_z = slice(self.pad_size[2],self.pad_size[2] + shape[2])
+
+        self.y            = generate_grid_1d(self.dim[0], dtype=dtype, device=device).unsqueeze(-1).unsqueeze(-1)
+        self.x            = generate_grid_1d(self.dim[1], dtype=dtype, device=device).unsqueeze(0).unsqueeze(-1)
+        self.z            = generate_grid_1d(self.dim[2], dtype=dtype, device=device).unsqueeze(0).unsqueeze(0)
+
+        self.ky           = generate_grid_1d(self.dim[0], flag_fourier = True, dtype=dtype, device=device).unsqueeze(-1).unsqueeze(-1)
+        self.kx           = generate_grid_1d(self.dim[1], flag_fourier = True, dtype=dtype, device=device).unsqueeze(0).unsqueeze(-1)
+        self.kz           = generate_grid_1d(self.dim[2], flag_fourier = True, dtype=dtype, device=device).unsqueeze(0).unsqueeze(0)
+
+        #Compute FFTs sequentially if object size is too large
+        self.slice_per_tile = int(np.min([np.floor(MAX_DIM * self.dim[self.axis] / np.prod(self.dim)), self.dim[self.axis]]))
+        self.dtype          = dtype
+        self.device         = device
+
+        if self.axis == 0:
+            self.coord_phase_1 = -2.0 * np.pi * self.kz * self.x
+            self.coord_phase_2 = -2.0 * np.pi * self.kx * self.z
+        elif self.axis == 1:
+            self.coord_phase_1 = -2.0 * np.pi * self.kz * self.y
+            self.coord_phase_2 = -2.0 * np.pi * self.ky * self.z
+        elif self.axis == 2:
+            self.coord_phase_1 = -2.0 * np.pi * self.kx * self.y
+            self.coord_phase_2 = -2.0 * np.pi * self.ky * self.x
+
+    def _rotate_3d(self, obj, shear_phase_1, shear_phase_2):
+        """
+        This function rotates a 3D image by shearing, (applied in Fourier space)
+        ** Note: the rotation is performed along the z axis
+
+        [ cos(theta)  -sin(theta) ] = [ 1  alpha ] * [ 1     0  ] * [ 1  alpha ]
+        [ sin(theta)  cos(theta)  ]   [ 0    1   ]   [ beta  1  ]   [ 0    1   ]
+        alpha = tan(theta/2)
+        beta = -sin(theta)
+
+        Shearing in one shapeension is applying phase shift in 1D fourier transform
+        Input:
+          obj: 3D array (supposed to be an image), the axes are [z,y,x]
+          theta: desired angle of rotation in *degrees*
+        Output:
+          obj_rotate: rotate 3D array
+        """
+        flag_complex = obj.is_complex()
+        self.obj_rotate[self.range_crop_y, self.range_crop_x, self.range_crop_z] = op.r2c(obj)
+        if self.axis == 0:
+            self.obj_rotate = op.convolve_kernel(self.obj_rotate, shear_phase_1) #y,x,z
+            self.obj_rotate = op.convolve_kernel(self.obj_rotate.permute([0,2,1]), shear_phase_2.permute([0,2,1])) #y,z,x
+            self.obj_rotate = op.convolve_kernel(self.obj_rotate.permute([0,2,1]), shear_phase_1) #y,x,z
+
+        elif self.axis == 1:
+            self.obj_rotate = op.convolve_kernel(self.obj_rotate.permute([1,0,2]), shear_phase_1.permute([1,0,2])) #x,y,z
+            self.obj_rotate = op.convolve_kernel(self.obj_rotate.permute([0,2,1]), shear_phase_2.permute([1,2,0])) #x,z,y
+            self.obj_rotate = op.convolve_kernel(self.obj_rotate.permute([0,2,1]), shear_phase_1.permute([1,0,2])) #x,y,z
+            self.obj_rotate = self.obj_rotate.permute([1,0,2])
+
+        elif self.axis == 2:
+            self.obj_rotate = op.convolve_kernel(self.obj_rotate.permute([2,0,1]), shear_phase_1.permute([2,0,1])) #z,y,x
+            self.obj_rotate = op.convolve_kernel(self.obj_rotate.permute([0,2,1]), shear_phase_2.permute([2,1,0])) #z,x,y
+            self.obj_rotate = op.convolve_kernel(self.obj_rotate.permute([0,2,1]), shear_phase_1.permute([2,0,1])) #z,y,x
+            self.obj_rotate = self.obj_rotate.permute([1,2,0])
+        if flag_complex:
+            obj[:] = self.obj_rotate[self.range_crop_y, self.range_crop_x, self.range_crop_z]
+        else:
+            obj[:] = self.obj_rotate[self.range_crop_y, self.range_crop_x, self.range_crop_z].real
+        return obj
+
+    def forward(self, obj, theta):
+        self.theta = theta
+        if theta == 0:
+            return obj
+        else:
+            flag_cpu = False
+            if self.device == th.device('cuda'):
+                if not obj.is_cuda:
+                    flag_cpu = True
+            #         obj = obj.to(self.device)
+            theta      *= np.pi / 180.0
+            alpha       = 1.0 * np.tan(theta / 2.0)
+            beta        = np.sin(-1.0 * theta)
+
+            shear_phase_1 = th.exp(1j * self.coord_phase_1 * alpha)
+            shear_phase_2 = th.exp(1j * self.coord_phase_2 * beta)
+
+            self.dim[self.axis] = self.slice_per_tile
+            self.obj_rotate = op.r2c(th.ones([self.dim[0], self.dim[1], self.dim[2]], dtype=self.dtype, device=self.device) * self.pad_value)
+
+            for idx_start in range(0, obj.shape[self.axis], self.slice_per_tile):
+                idx_end = np.min([obj.shape[self.axis], idx_start+self.slice_per_tile])
+                idx_slice = slice(idx_start, idx_end)
+                self.dim[self.axis] = int(idx_end - idx_start)
+                if self.axis == 0:
+                    self.range_crop_y = slice(0, self.dim[self.axis])
+                    obj[idx_slice,:,:] = self._rotate_3d(obj[idx_slice,:,:].cuda(), shear_phase_1, shear_phase_2).cpu()
+                elif self.axis == 1:
+                    self.range_crop_x = slice(0, self.dim[self.axis])
+                    obj[:,idx_slice,:] = self._rotate_3d(obj[:,idx_slice,:].cuda(), shear_phase_1, shear_phase_2).cpu()
+                elif self.axis == 2:
+                    self.range_crop_z = slice(0, self.dim[self.axis])
+                    obj[:,:,idx_slice] = self._rotate_3d(obj[:,:,idx_slice].cuda(), shear_phase_1, shear_phase_2).cpu()
+                self.obj_rotate[:] = self.pad_value + 0.j
+            self.dim[self.axis] = obj.shape[self.axis]
+            self.obj_rotate = None
+            if self.device == th.device('cuda'):
+                th.cuda.empty_cache()
+            if flag_cpu:
+                obj = obj.cpu()
+            return obj
+
+    def backward(self, obj):
+        theta = -1 * self.theta
+        if theta == 0:
+            return obj
+        else:
+            if self.device == th.device("cuda"):
+                if not obj.is_cuda:
+                    obj = obj.to(self.device)
+            theta      *= np.pi / 180.0
+            alpha       = 1.0 * np.tan(theta / 2.0)
+            beta        = np.sin(-1.0 * theta)
+
+            shear_phase_1 = th.exp(1j * self.coord_phase_1 * alpha)
+            shear_phase_2 = th.exp(1j * self.coord_phase_2 * beta)
+
+            self.dim[self.axis] = self.slice_per_tile
+            self.obj_rotate = op.r2c(th.zeros([self.dim[0], self.dim[1], self.dim[2]], dtype=self.dtype, device=self.device))
+
+            for idx_start in range(0, obj.shape[self.axis], self.slice_per_tile):
+                idx_end = np.min([obj.shape[self.axis], idx_start+self.slice_per_tile])
+                idx_slice = slice(idx_start, idx_end)
+                self.dim[self.axis] = int(idx_end - idx_start)
+                if self.axis == 0:
+                    self.range_crop_y = slice(0, self.dim[self.axis])
+                    obj[idx_slice,:,:] = self._rotate_3d(obj[idx_slice,:,:], alpha, beta, shear_phase_1, shear_phase_2)
+                elif self.axis == 1:
+                    self.range_crop_x = slice(0, self.dim[self.axis])
+                    obj[:,idx_slice,:] = self._rotate_3d(obj[:,idx_slice,:], alpha, beta, shear_phase_1, shear_phase_2)
+                elif self.axis == 2:
+                    self.range_crop_z = slice(0, self.dim[self.axis])
+                    obj[:,:,idx_slice] = self._rotate_3d(obj[:,:,idx_slice], alpha, beta, shear_phase_1, shear_phase_2)
+                self.obj_rotate[:] = 0.0
+            self.dim[self.axis] = obj.shape[self.axis]
+            self.obj_rotate = None
+            if not obj.is_cuda:
+                obj = obj.cpu()
+            return obj
+
+
 
 # Cell
 def HSV_to_RGB(cin):
@@ -1070,6 +1445,8 @@ def HSV_to_RGB(cin):
     imout[:, :, 2] = 255 * (i0 * p + i1 * p + i2 * t + i3 * v + i4 * v + i5 * q)
 
     return imout
+
+# Cell
 def P1A_to_HSV(cin, vmin=None, vmax=None):
     """\
     Transform a complex array into an RGB image,
@@ -1088,7 +1465,7 @@ def P1A_to_HSV(cin, vmin=None, vmax=None):
 
     return HSV_to_RGB((h, s, v))
 
-
+# Cell
 def imsave(a, filename=None, vmin=None, vmax=None, cmap=None):
     """
     imsave(a) converts array a into, and returns a PIL image
@@ -1801,6 +2178,9 @@ import torch as th
 import torch.nn as nn
 from .util import fftshift_checkerboard, Param
 import numpy as np
+import smpr3d.operators as op
+import smpr3d.util as util
+import numpy as np
 
 # def zernike_aberrations(qx, qy, lam, C):
 #     """
@@ -1887,6 +2267,31 @@ import numpy as np
 #         chi = chi.squeeze()
 #     return chi
 
+# Cell
+def convolve_kernel(tensor_in, kernel, n_dim=1, flag_inplace=True):
+    '''
+    Compute convolution FFT(tensor_in) and kernel
+    Required Args:
+        tensor_in: variable 1 in real space
+        kernel: variable 2 in reciprocal space
+
+    Optional Args [default]
+        n_dim: number of dimensions to compute convolution [1]
+        flag_inplace: Whether or not compute convolution inplace, result saved in 'tensor_in' [True]
+    '''
+    dim = [-n_dim+i for i in range(n_dim)]
+    if flag_inplace:
+        tensor_in  = th.fft.fftn(tensor_in, dim=dim)
+        tensor_in *= kernel
+        tensor_in  = th.fft.ifftn(tensor_in, dim=dim)
+        return tensor_in
+    else:
+        output  = th.fft.fftn(tensor_in, dim=dim)
+        output *= kernel
+        output  = th.fft.ifftn(output, dim=dim)
+        return output
+
+# Cell
 def cartesian_aberrations_single(qx, qy, lam, C):
     """
     Zernike polynomials in the cartesian coordinate system
@@ -2176,7 +2581,62 @@ class ZernikeProbe(nn.Module):
 
         return Psi
 
+# Cell
 
+def generate_hard_pupil(shape, pixel_size, numerical_aperture, wavelength, \
+                   dtype=th.float32, device=th.device('cuda')):
+    """
+    This function generates pupil function(circular function) given shape, pixel_size, na, and wavelength
+    """
+    assert len(shape) == 2, "pupil should be two dimensional!"
+    ky_lin, kx_lin = util.generate_grid_2d(shape, pixel_size, flag_fourier=True, dtype=dtype, device=device)
+
+    pupil_radius = numerical_aperture/wavelength
+    pupil        = (kx_lin**2 + ky_lin**2 <= pupil_radius**2).type(dtype)
+    return op.r2c(pupil)
+
+# Cell
+def generate_angular_spectrum_kernel(shape, pixel_size, wavelength, \
+                                     numerical_aperture=None,  flag_band_limited=True, \
+                                     dtype=th.float32, device=th.device('cuda')):
+    """
+    Function that generates angular spectrum propagation kernel WITHOUT the distance
+    The angular spectrum has the following form:
+    p = exp(distance * kernel)
+    kernel = 1j * 2 * pi * sqrt((ri/wavelength)**2-x**2-y**2)
+    and this function generates the kernel only!
+    """
+    assert len(shape) == 2, "pupil should be two dimensional!"
+    ky_lin, kx_lin = util.generate_grid_2d(shape, pixel_size, flag_fourier=True, dtype=dtype, device=device)
+    if flag_band_limited:
+        assert numerical_aperture is not None, "need to provide numerical aperture of the system!"
+        pupil_crop    = op.r2c(generate_hard_pupil(shape, pixel_size, numerical_aperture, wavelength, dtype, device))
+    else:
+        pupil_crop    = 1.0
+    prop_kernel = 2.0 * np.pi * pupil_crop * \
+                  ((1./wavelength)**2 - kx_lin**2 - ky_lin**2) ** 0.5
+    return 1j *prop_kernel
+
+# Cell
+class Pupil(nn.Module):
+    """
+    Class for applying pupil in forward model computation
+    """
+    def __init__(self, shape, pixel_size, wavelength, \
+                 numerical_aperture = 1.0, pupil = None, \
+                 dtype=th.float32, device=th.device('cuda'), **kwargs):
+        super(Pupil, self).__init__()
+        if pupil is not None:
+            self.pupil = pupil.type(dtype).to(device)
+            if len(self.pupil.shape) == 2:
+                self.pupil = op.r2c(self.pupil)
+        else:
+            self.pupil = generate_hard_pupil(shape, pixel_size, numerical_aperture, wavelength, dtype, device)
+    def get_pupil(self):
+        return self.pupil.cpu()
+    def forward(self, field):
+        field_out = op.convolve_kernel(field, self.pupil, 2, False)
+        return field_out
 
 # Cell
 import h5py
@@ -2802,6 +3262,417 @@ def h5info(filename, output=None):
         return outstring
 
 
+
+# Cell
+import numpy as np
+import torch
+from skimage import transform
+from pystackreg import StackReg
+
+class ImageTransformOpticalFlow():
+    """
+    Class written to register stack of images for AET.
+    Uses correlation based method to determine subpixel shift between predicted and measured images.
+    Input parameters:
+        - shape: shape of the image
+    """
+    def __init__(self, shape, method="turboreg"):
+        self.shape = shape
+        self.x_lin, self.y_lin = np.meshgrid(np.arange(self.shape[1]), np.arange(self.shape[0]))
+        self.xy_lin = np.concatenate((self.x_lin[np.newaxis,], self.y_lin[np.newaxis,])).astype('float32')
+        self.sr = StackReg(StackReg.RIGID_BODY)
+
+    def _estimate_single(self, predicted, measured):
+        assert predicted.shape == self.shape
+        assert measured.shape == self.shape
+        aff_mat = self.sr.register(measured, predicted)
+        tform = transform.AffineTransform(matrix = aff_mat)
+        measured_warp = transform.warp(measured, tform.inverse, cval = 1.0, order = 5)
+        transform_final = aff_mat.flatten()[0:6]
+        return measured_warp, transform_final
+
+    def estimate(self, predicted_stack, measured_stack):
+        assert predicted_stack.shape == measured_stack.shape
+        transform_vec_list = np.zeros((6,measured_stack.shape[2]), dtype="float32")
+
+        #Change from torch array to numpy array
+        flag_predicted_gpu = predicted_stack.is_cuda
+        if flag_predicted_gpu:
+            predicted_stack = predicted_stack.cpu()
+
+        flag_measured_gpu = measured_stack.is_cuda
+        if flag_measured_gpu:
+            measured_stack = measured_stack.cpu()
+
+        predicted_np = np.array(predicted_stack.detach())
+        measured_np  = np.array(measured_stack.detach())
+
+        #For each image, estimate the affine transform error
+        for img_idx in range(measured_np.shape[2]):
+            measured_np[...,img_idx], transform_vec = self._estimate_single(predicted_np[...,img_idx], \
+                                                                      measured_np[...,img_idx])
+            transform_vec_list[...,img_idx] = transform_vec
+
+        #Change data back to torch tensor format
+        if flag_predicted_gpu:
+            predicted_stack = predicted_stack.cuda()
+
+        measured_np = torch.tensor(measured_np)
+        if flag_measured_gpu:
+            measured_stack  = measured_stack.cuda()
+            measured_np     = measured_np.cuda()
+
+        return measured_np, torch.tensor(transform_vec_list)
+
+
+
+# Cell
+"""
+
+"""
+import smpr3d.util as util
+import smpr3d.operators as op
+
+import torch
+import torch.nn as nn
+
+import numpy as np
+import numpy.fft as fft
+
+possible_methods = [
+                    "gradient",\
+                    "phase_correlation",\
+                    "cross_correlation",\
+                    "hybrid_correlation"
+                   ]
+
+correlation_methods = [
+                    "phase_correlation",\
+                    "cross_correlation",\
+                    "hybrid_correlation"
+                   ]
+
+def is_correlation_method(method):
+    return method in correlation_methods
+
+def is_valid_method(method):
+    return method in possible_methods
+
+class ImageShiftCorrelationBased():
+    """
+    Class written to register stack of images for AET.
+    Uses correlation based method to determine subpixel shift between predicted and measured images.
+    Input parameters:
+        - shape: shape of the image
+        - pixel_size: pixel size of the image
+        - upsample_factor: precision of shift algorithm, to 1/upsample_factor accuracy.
+    """
+    def __init__(self, shape, upsample_factor=10, method="cross_correlation", dtype=torch.float32, device=torch.device('cuda')):
+        pixel_size = 1.0
+        self.ky_lin, self.kx_lin = util.generate_grid_2d(shape, pixel_size, flag_fourier=True, dtype=dtype, device=device)
+        self.upsample_factor = upsample_factor
+        self.method = method
+    def _upsampled_dft(self, data, upsampled_region_size,
+                       upsample_factor=1, axis_offsets=None):
+        """
+        Upsampled DFT by matrix multiplication.
+
+        This code is intended to provide the same result as if the following
+        operations were performed:
+            - Embed the array "data" in an array that is ``upsample_factor`` times
+              larger in each dimension.  ifftshift to bring the center of the
+              image to (1,1).
+            - Take the FFT of the larger array.
+            - Extract an ``[upsampled_region_size]`` region of the result, starting
+              with the ``[axis_offsets+1]`` element.
+
+        It achieves this result by computing the DFT in the output array without
+        the need to zeropad. Much faster and memory efficient than the zero-padded
+        FFT approach if ``upsampled_region_size`` is much smaller than
+        ``data.size * upsample_factor``.
+
+        Parameters
+        ----------
+        data : array
+            The input data array (DFT of original data) to upsample.
+        upsampled_region_size : integer or tuple of integers, optional
+            The size of the region to be sampled.  If one integer is provided, it
+            is duplicated up to the dimensionality of ``data``.
+        upsample_factor : integer, optional
+            The upsampling factor.  Defaults to 1.
+        axis_offsets : tuple of integers, optional
+            The offsets of the region to be sampled.  Defaults to None (uses
+            image center)
+
+        Returns
+        -------
+        output : ndarray
+                The upsampled DFT of the specified region.
+        """
+        # if people pass in an integer, expand it to a list of equal-sized sections
+        if not hasattr(upsampled_region_size, "__iter__"):
+            upsampled_region_size = [upsampled_region_size, ] * data.ndim
+        else:
+            if len(upsampled_region_size) != data.ndim:
+                raise ValueError("shape of upsampled region sizes must be equal "
+                                 "to input data's number of dimensions.")
+
+        if axis_offsets is None:
+            axis_offsets = [0, ] * data.ndim
+        else:
+            if len(axis_offsets) != data.ndim:
+                raise ValueError("number of axis offsets must be equal to input "
+                                 "data's number of dimensions.")
+
+        im2pi = 1j * 2 * np.pi
+
+        dim_properties = list(zip(data.shape, upsampled_region_size, axis_offsets))
+
+        for (n_items, ups_size, ax_offset) in dim_properties[::-1]:
+            kernel = ((np.arange(ups_size) - ax_offset)[:, None]
+                      * fft.fftfreq(n_items, upsample_factor))
+            kernel = np.exp(-im2pi * kernel)
+
+            # Equivalent to:
+            #   data[i, j, k] = kernel[i, :] @ data[j, k].T
+            data = np.tensordot(kernel, data, axes=(1, -1))
+        return data
+
+    def _compute_error(self, cross_correlation_max, src_amp, target_amp):
+        """
+        Compute RMS error metric between ``src_image`` and ``target_image``.
+
+        Parameters
+        ----------
+        cross_correlation_max : complex
+            The complex value of the cross correlation at its maximum point.
+        src_amp : float
+            The normalized average image intensity of the source image
+        target_amp : float
+            The normalized average image intensity of the target image
+        """
+        error = 1.0 - cross_correlation_max * cross_correlation_max.conj() /\
+            (src_amp * target_amp)
+        return np.sqrt(np.abs(error))
+
+
+    def _cross_correlation(self, reference_image, moving_image, upsample_factor=1,
+                          method = "cross_correlation", space="real", return_error=True):
+        """Efficient subpixel image translation registration by cross-correlation.
+
+        This code gives the same precision as the FFT upsampled cross-correlation
+        in a fraction of the computation time and with reduced memory requirements.
+        It obtains an initial estimate of the cross-correlation peak by an FFT and
+        then refines the shift estimation by upsampling the DFT only in a small
+        neighborhood of that estimate by means of a matrix-multiply DFT.
+
+        Parameters
+        ----------
+        reference_image : array
+            Reference image.
+        moving_image : array
+            Image to register. Must be same dimensionality as
+            ``reference_image``.
+        upsample_factor : int, optional
+            Upsampling factor. Images will be registered to within
+            ``1 / upsample_factor`` of a pixel. For example
+            ``upsample_factor == 20`` means the images will be registered
+            within 1/20th of a pixel. Default is 1 (no upsampling)
+        method: string, one of "cross_correlation", "phase_correlation", or "hybrid_correlation"
+        space : string, one of "real" or "fourier", optional
+            Defines how the algorithm interprets input data. "real" means data
+            will be FFT'd to compute the correlation, while "fourier" data will
+            bypass FFT of input data. Case insensitive.
+        return_error : bool, optional
+            Returns error and phase difference if on, otherwise only
+            shifts are returned
+
+        Returns
+        -------
+        shifts : ndarray
+            Shift vector (in pixels) required to register ``moving_image``
+            with ``reference_image``. Axis ordering is consistent with
+            numpy (e.g. Z, Y, X)
+        error : float
+            Translation invariant normalized RMS error between
+            ``reference_image`` and ``moving_image``.
+        phasediff : float
+            Global phase difference between the two images (should be
+            zero if images are non-negative).
+
+        References
+        ----------
+        .. [1] Manuel Guizar-Sicairos, Samuel T. Thurman, and James R. Fienup,
+               "Efficient subpixel image registration algorithms,"
+               Optics Letters 33, 156-158 (2008). :DOI:`10.1364/OL.33.000156`
+        .. [2] James R. Fienup, "Invariant error metrics for image reconstruction"
+               Optics Letters 36, 8352-8357 (1997). :DOI:`10.1364/AO.36.008352`
+
+        """
+        # images must be the same shape
+        if reference_image.shape != moving_image.shape:
+            raise ValueError("images must be same shape")
+
+        # assume complex data is already in Fourier space
+        if space.lower() == 'fourier':
+            src_freq = reference_image
+            target_freq = moving_image
+        # real data needs to be fft'd.
+        elif space.lower() == 'real':
+            src_freq = fft.fftn(reference_image)
+            target_freq = fft.fftn(moving_image)
+        else:
+            raise ValueError('space argument must be "real" or "fourier"')
+        # Whole-pixel shift - Compute cross-correlation by an IFFT
+        shape = src_freq.shape
+        image_product = src_freq * target_freq.conj()
+        if method == "phase_correlation":
+            image_product = np.exp(1.0j*np.angle(image_product))
+        elif method == "hybrid_correlation":
+            image_product = np.sqrt(np.abs(image_product))*np.exp(1.0j*np.angle(image_product))
+        elif method == "cross_correlation":
+            pass
+        else:
+            raise ValueError('method argument not valid.')
+        cross_correlation = fft.ifftn(image_product)
+
+        # Locate maximum
+        maxima = np.unravel_index(np.argmax(np.abs(cross_correlation)),
+                                  cross_correlation.shape)
+        midpoints = np.array([np.fix(axis_size / 2) for axis_size in shape])
+
+        shifts = np.array(maxima, dtype=np.float64)
+        shifts[shifts > midpoints] -= np.array(shape)[shifts > midpoints]
+
+        if upsample_factor == 1:
+            if return_error:
+                src_amp = np.sum(np.abs(src_freq) ** 2) / src_freq.size
+                target_amp = np.sum(np.abs(target_freq) ** 2) / target_freq.size
+                CCmax = cross_correlation[maxima]
+        # If upsampling > 1, then refine estimate with matrix multiply DFT
+        else:
+            # Initial shift estimate in upsampled grid
+            shifts = np.round(shifts * upsample_factor) / upsample_factor
+            upsampled_region_size = np.ceil(upsample_factor * 1.5)
+            # Center of output array at dftshift + 1
+            dftshift = np.fix(upsampled_region_size / 2.0)
+            upsample_factor = np.array(upsample_factor, dtype=np.float64)
+            normalization = (src_freq.size * upsample_factor ** 2)
+            # Matrix multiply DFT around the current shift estimate
+            sample_region_offset = dftshift - shifts*upsample_factor
+            cross_correlation = self._upsampled_dft(image_product.conj(),
+                                               upsampled_region_size,
+                                               upsample_factor,
+                                               sample_region_offset).conj()
+            cross_correlation /= normalization
+            # Locate maximum and map back to original pixel grid
+            maxima = np.unravel_index(np.argmax(np.abs(cross_correlation)),
+                                      cross_correlation.shape)
+            CCmax = cross_correlation[maxima]
+
+            maxima = np.array(maxima, dtype=np.float64) - dftshift
+
+            shifts = shifts + maxima / upsample_factor
+
+            if return_error:
+                src_amp = self._upsampled_dft(src_freq * src_freq.conj(),
+                                         1, upsample_factor)[0, 0]
+                src_amp /= normalization
+                target_amp = self._upsampled_dft(target_freq * target_freq.conj(),
+                                            1, upsample_factor)[0, 0]
+                target_amp /= normalization
+
+        # If its only one row or column the shift along that dimension has no
+        # effect. We set to zero.
+        for dim in range(src_freq.ndim):
+            if shape[dim] == 1:
+                shifts[dim] = 0
+
+        if return_error:
+            return shifts, self._compute_error(CCmax, src_amp, target_amp)
+        else:
+            return shifts
+
+    def _shift_stack_inplace(self, stack, shift_list):
+        for img_idx in range(stack.shape[2]):
+            y_shift = shift_list[0,img_idx]
+            x_shift = shift_list[1,img_idx]
+            kernel  = torch.exp(2j * np.pi * (self.kx_lin * x_shift + self.ky_lin * y_shift))
+            stack[...,img_idx] = torch.real(op.convolve_kernel(stack[...,img_idx], kernel, n_dim=2))
+        return stack
+
+    def estimate(self, predicted, measured):
+        """
+        A function to estimate shift error and return the shift correct image stack
+        Input parameters:
+            - predicted: predicted amplitudes, should be torch array
+            - measured: measured amplitudes, should be torch array
+        """
+        assert predicted.shape == measured.shape
+        shift_list = np.zeros((2,measured.shape[2]), dtype="float32")
+        err_list = []
+
+        #Change from torch array to numpy array
+        flag_predicted_gpu = predicted.is_cuda
+        if flag_predicted_gpu:
+            predicted = predicted.cpu()
+
+        flag_measured_gpu = measured.is_cuda
+        if flag_measured_gpu:
+            measured = measured.cpu()
+
+        predicted_np = np.array(predicted.detach())
+        measured_np  = np.array(measured.detach())
+
+        #For each image, estimate the shift error
+        for img_idx in range(measured_np.shape[2]):
+            shift, err = self._cross_correlation(predicted_np[...,img_idx], \
+                                                 measured_np[...,img_idx], \
+                                                 method = self.method, \
+                                                 upsample_factor=self.upsample_factor)
+            shift_list[:,img_idx] = shift.astype("float32")
+            err_list.append(err)
+
+        #Change data back to torch tensor format
+        if flag_predicted_gpu:
+            predicted = predicted.cuda()
+
+        measured_np = torch.tensor(measured_np)
+        if flag_measured_gpu:
+            measured    = measured.cuda()
+            measured_np = measured_np.cuda()
+
+        #Shift measured image
+        measured_np = self._shift_stack_inplace(measured_np, -1. * shift_list)
+        if (abs(shift_list) > 40.0).any():
+        	print("Shift too large!", np.max(np.abs(shift_list)))
+        	shift_list[:] = 0.0
+        return measured_np, torch.tensor(shift_list), torch.tensor(err_list)
+
+class ImageShiftGradientBased(nn.Module):
+    """
+    A class that solves for shift between measurement and prediction. This uses pytorch autograd, and is gradient based.
+    """
+    def __init__(self, shape, dtype=torch.float32, device=torch.device('cuda'), **kwargs):
+        super(ImageShiftGradientBased, self).__init__()
+        pixel_size = 1.0
+        self.ky_lin, self.kx_lin = util.generate_grid_2d(shape, pixel_size, flag_fourier=True, dtype=dtype, device=device)
+
+    def forward(self, field, shift=None):
+        """
+        Input parameters:
+            - field: refocused field, before cropping
+            - shift: estimated shift [y_shift, x_shift], default None (shift estimation off)
+        """
+        if shift is None:
+            return field
+        field_out = field.clone()
+        for img_idx in range(field.shape[2]):
+            y_shift = shift[0,img_idx]
+            x_shift = shift[1,img_idx]
+            kernel  = torch.exp(2j * np.pi * (self.kx_lin * x_shift + self.ky_lin * y_shift))
+            field_out[...,img_idx] = op.convolve_kernel(field[...,img_idx], kernel, 2, True)
+        return field_out
 
 # Cell
 import numpy as np

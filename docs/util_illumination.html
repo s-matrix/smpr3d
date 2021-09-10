@@ -33,6 +33,13 @@ nb_path: "nbs/01d_util_illumination.ipynb"
     
 <div class="cell border-box-sizing code_cell rendered">
 
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
 <div class="output_wrapper">
 <div class="output">
 
@@ -40,7 +47,45 @@ nb_path: "nbs/01d_util_illumination.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="cartesian_aberrations_single" class="doc_header"><code>cartesian_aberrations_single</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1890" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>cartesian_aberrations_single</code>(<strong><code>qx</code></strong>, <strong><code>qy</code></strong>, <strong><code>lam</code></strong>, <strong><code>C</code></strong>)</p>
+<h4 id="convolve_kernel" class="doc_header"><code>convolve_kernel</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L2271" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>convolve_kernel</code>(<strong><code>tensor_in</code></strong>, <strong><code>kernel</code></strong>, <strong><code>n_dim</code></strong>=<em><code>1</code></em>, <strong><code>flag_inplace</code></strong>=<em><code>True</code></em>)</p>
+</blockquote>
+<p>Compute convolution FFT(tensor_in) and kernel
+Required Args:
+    tensor_in: variable 1 in real space
+    kernel: variable 2 in reciprocal space</p>
+<p>Optional Args [default]
+    n_dim: number of dimensions to compute convolution [1]
+    flag_inplace: Whether or not compute convolution inplace, result saved in 'tensor_in' [True]</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4 id="cartesian_aberrations_single" class="doc_header"><code>cartesian_aberrations_single</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L2295" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>cartesian_aberrations_single</code>(<strong><code>qx</code></strong>, <strong><code>qy</code></strong>, <strong><code>lam</code></strong>, <strong><code>C</code></strong>)</p>
 </blockquote>
 <p>Zernike polynomials in the cartesian coordinate system
 :param qx:
@@ -70,7 +115,7 @@ nb_path: "nbs/01d_util_illumination.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="cartesian_aberrations" class="doc_header"><code>cartesian_aberrations</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1959" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>cartesian_aberrations</code>(<strong><code>qx</code></strong>, <strong><code>qy</code></strong>, <strong><code>lam</code></strong>, <strong><code>C</code></strong>)</p>
+<h4 id="cartesian_aberrations" class="doc_header"><code>cartesian_aberrations</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L2364" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>cartesian_aberrations</code>(<strong><code>qx</code></strong>, <strong><code>qy</code></strong>, <strong><code>lam</code></strong>, <strong><code>C</code></strong>)</p>
 </blockquote>
 <p>Zernike polynomials in the cartesian coordinate system
 :param qx:
@@ -100,7 +145,7 @@ nb_path: "nbs/01d_util_illumination.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="aperture" class="doc_header"><code>aperture</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L2029" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>aperture</code>(<strong><code>q</code></strong>:<code>Tensor</code>, <strong><code>lam</code></strong>, <strong><code>alpha_max</code></strong>, <strong><code>edge</code></strong>=<em><code>2</code></em>)</p>
+<h4 id="aperture" class="doc_header"><code>aperture</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L2434" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>aperture</code>(<strong><code>q</code></strong>:<code>Tensor</code>, <strong><code>lam</code></strong>, <strong><code>alpha_max</code></strong>, <strong><code>edge</code></strong>=<em><code>2</code></em>)</p>
 </blockquote>
 
 </div>
@@ -124,7 +169,7 @@ nb_path: "nbs/01d_util_illumination.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="ZernikeProbe2" class="doc_header"><code>class</code> <code>ZernikeProbe2</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L2045" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>ZernikeProbe2</code>(<strong><code>q</code></strong>:<code>Tensor</code>, <strong><code>lam</code></strong>, <strong><code>fft_shifted</code></strong>=<em><code>True</code></em>) :: <code>Module</code></p>
+<h2 id="ZernikeProbe2" class="doc_header"><code>class</code> <code>ZernikeProbe2</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L2450" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>ZernikeProbe2</code>(<strong><code>q</code></strong>:<code>Tensor</code>, <strong><code>lam</code></strong>, <strong><code>fft_shifted</code></strong>=<em><code>True</code></em>) :: <code>Module</code></p>
 </blockquote>
 <p>Base class for all neural network modules.</p>
 <p>Your models should also subclass this class.</p>
@@ -172,7 +217,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="ZernikeProbeSingle" class="doc_header"><code>class</code> <code>ZernikeProbeSingle</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L2074" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>ZernikeProbeSingle</code>(<strong><code>q</code></strong>:<code>Tensor</code>, <strong><code>lam</code></strong>, <strong><code>fft_shifted</code></strong>=<em><code>True</code></em>) :: <code>Module</code></p>
+<h2 id="ZernikeProbeSingle" class="doc_header"><code>class</code> <code>ZernikeProbeSingle</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L2479" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>ZernikeProbeSingle</code>(<strong><code>q</code></strong>:<code>Tensor</code>, <strong><code>lam</code></strong>, <strong><code>fft_shifted</code></strong>=<em><code>True</code></em>) :: <code>Module</code></p>
 </blockquote>
 <p>Base class for all neural network modules.</p>
 <p>Your models should also subclass this class.</p>
@@ -220,7 +265,7 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h2 id="ZernikeProbe" class="doc_header"><code>class</code> <code>ZernikeProbe</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L2103" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>ZernikeProbe</code>(<strong><code>q</code></strong>:<code>Tensor</code>, <strong><code>lam</code></strong>, <strong><code>A_init</code></strong>, <strong><code>A_requires_grad</code></strong>, <strong><code>fft_shifted</code></strong>=<em><code>True</code></em>, <strong><code>C1</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C12a</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C12b</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C21a</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C21b</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C23a</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C23b</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C3</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C32a</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C32b</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C34a</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C34b</code></strong>=<em><code>tensor([0.])</code></em>) :: <code>Module</code></p>
+<h2 id="ZernikeProbe" class="doc_header"><code>class</code> <code>ZernikeProbe</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L2508" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>ZernikeProbe</code>(<strong><code>q</code></strong>:<code>Tensor</code>, <strong><code>lam</code></strong>, <strong><code>A_init</code></strong>, <strong><code>A_requires_grad</code></strong>, <strong><code>fft_shifted</code></strong>=<em><code>True</code></em>, <strong><code>C1</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C12a</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C12b</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C21a</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C21b</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C23a</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C23b</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C3</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C32a</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C32b</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C34a</code></strong>=<em><code>tensor([0.])</code></em>, <strong><code>C34b</code></strong>=<em><code>tensor([0.])</code></em>) :: <code>Module</code></p>
 </blockquote>
 <p>Base class for all neural network modules.</p>
 <p>Your models should also subclass this class.</p>
@@ -246,6 +291,106 @@ parameters converted too when you call :meth:<code>to</code>, etc.</p>
 <p>:ivar training: Boolean represents whether this module is in training or
                 evaluation mode.
 :vartype training: bool</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4 id="generate_hard_pupil" class="doc_header"><code>generate_hard_pupil</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L2586" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>generate_hard_pupil</code>(<strong><code>shape</code></strong>, <strong><code>pixel_size</code></strong>, <strong><code>numerical_aperture</code></strong>, <strong><code>wavelength</code></strong>, <strong><code>dtype</code></strong>=<em><code>torch.float32</code></em>, <strong><code>device</code></strong>=<em><code>device(type='cuda')</code></em>)</p>
+</blockquote>
+<p>This function generates pupil function(circular function) given shape, pixel_size, na, and wavelength</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4 id="generate_angular_spectrum_kernel" class="doc_header"><code>generate_angular_spectrum_kernel</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L2599" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>generate_angular_spectrum_kernel</code>(<strong><code>shape</code></strong>, <strong><code>pixel_size</code></strong>, <strong><code>wavelength</code></strong>, <strong><code>numerical_aperture</code></strong>=<em><code>None</code></em>, <strong><code>flag_band_limited</code></strong>=<em><code>True</code></em>, <strong><code>dtype</code></strong>=<em><code>torch.float32</code></em>, <strong><code>device</code></strong>=<em><code>device(type='cuda')</code></em>)</p>
+</blockquote>
+<p>Function that generates angular spectrum propagation kernel WITHOUT the distance
+The angular spectrum has the following form:
+p = exp(distance <em> kernel)
+kernel = 1j </em> 2 <em> pi </em> sqrt((ri/wavelength)<strong>2-x</strong>2-y**2)
+and this function generates the kernel only!</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h2 id="Pupil" class="doc_header"><code>class</code> <code>Pupil</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L2621" class="source_link" style="float:right">[source]</a></h2><blockquote><p><code>Pupil</code>(<strong><code>shape</code></strong>, <strong><code>pixel_size</code></strong>, <strong><code>wavelength</code></strong>, <strong><code>numerical_aperture</code></strong>=<em><code>1.0</code></em>, <strong><code>pupil</code></strong>=<em><code>None</code></em>, <strong><code>dtype</code></strong>=<em><code>torch.float32</code></em>, <strong><code>device</code></strong>=<em><code>device(type='cuda')</code></em>, <strong>**<code>kwargs</code></strong>) :: <code>Module</code></p>
+</blockquote>
+<p>Class for applying pupil in forward model computation</p>
 
 </div>
 

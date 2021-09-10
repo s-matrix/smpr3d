@@ -470,8 +470,8 @@ class Sparse4DData:
 
     def center_of_mass(self: Sparse4DData):
         qx, qy = np.meshgrid(np.arange(self.scan_dimensions[0]),np.arange(self.scan_dimensions[1]))
-        comx = th.zeros(self.scan_dimensions, dtype=th.float32)
-        comy = th.zeros(self.scan_dimensions, dtype=th.float32)
+        comx = th.zeros(tuple(self.scan_dimensions), dtype=th.float32)
+        comy = th.zeros(tuple(self.scan_dimensions), dtype=th.float32)
 
         no_count_indicator = np.iinfo(self.indices.dtype).max
 
@@ -480,9 +480,9 @@ class Sparse4DData:
         threadsperblock = (16, 16)
         blockspergrid = tuple(np.ceil(np.array(self.indices.shape[:2]) / threadsperblock).astype(np.int))
 
-        qx = th.tensor(qx).astype(th.float32)
-        qy = th.tensor(qy).astype(th.float32)
-        center_of_mass_kernel[blockspergrid, threadsperblock](comx, comy, th.tensor(self.indices), th.tensor(self.counts.astype(np.uint32)),
+        qx = th.tensor(qx).to(th.float32)
+        qy = th.tensor(qy).to(th.float32)
+        center_of_mass_kernel[blockspergrid, threadsperblock](comx, comy, th.tensor(self.indices), th.tensor(self.counts.astype(np.float32)),
                                                               th.tensor(self.frame_dimensions), no_count_indicator, qx, qy)
         comy = comy.get()
         comx = comx.get()

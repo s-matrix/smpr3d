@@ -29,13 +29,13 @@ entries:
       url: util_illumination.html
     - output: web,pdf
       title: Util io
-      url: util_io.html
+      url: util_shift.html
     - output: web,pdf
       title: Sparse data structures
       url: sparse_data.html
     - output: web,pdf
       title: fasta algorithm
-      url: fasta.html
+      url: solvers.html
     - output: web,pdf
       title: Utils for setup
       url: setup.html
@@ -49,8 +49,14 @@ entries:
       title: Loss functions
       url: loss_functions.html
     - output: web,pdf
+      title: Regularizers
+      url: regularizers.html
+    - output: web,pdf
       title: Core
       url: core.html
+    - output: web,pdf
+      title: Modules
+      url: modules.html
     output: web
     title: smpr3d
   output: web

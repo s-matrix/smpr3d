@@ -40,13 +40,13 @@ nb_path: "nbs/01b_util_kernels.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7f99c855b310>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f99c855b310></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f99c855b310></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="Dispatcher object at 0x7fb133b79900>" class="doc_header"><code>Dispatcher object at 0x7fb133b79900></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Dispatcher object at 0x7fb133b79900></code>(<strong>*<code>args</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
 </blockquote>
-<p>CUDA Kernel object. When called, the kernel object will specialize itself
-for the given arguments (if no suitable specialized version already exists)
-&amp; compute capability, and launch on the device associated with the current
-context.</p>
-<p>Kernel objects are not to be constructed by the user, but instead are
+<p>CUDA Dispatcher object. When configured and called, the dispatcher will
+specialize itself for the given arguments (if no suitable specialized
+version already exists) &amp; compute capability, and launch on the device
+associated with the current context.</p>
+<p>Dispatcher objects are not to be constructed by the user, but instead are
 created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 </div>
@@ -77,13 +77,13 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7f99c855b340>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f99c855b340></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f99c855b340></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="Dispatcher object at 0x7fb133b799a0>" class="doc_header"><code>Dispatcher object at 0x7fb133b799a0></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Dispatcher object at 0x7fb133b799a0></code>(<strong>*<code>args</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
 </blockquote>
-<p>CUDA Kernel object. When called, the kernel object will specialize itself
-for the given arguments (if no suitable specialized version already exists)
-&amp; compute capability, and launch on the device associated with the current
-context.</p>
-<p>Kernel objects are not to be constructed by the user, but instead are
+<p>CUDA Dispatcher object. When configured and called, the dispatcher will
+specialize itself for the given arguments (if no suitable specialized
+version already exists) &amp; compute capability, and launch on the device
+associated with the current context.</p>
+<p>Dispatcher objects are not to be constructed by the user, but instead are
 created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 </div>
@@ -114,7 +114,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="sparse_to_dense_datacube_crop" class="doc_header"><code>sparse_to_dense_datacube_crop</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1289" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>sparse_to_dense_datacube_crop</code>(<strong><code>indices</code></strong>, <strong><code>counts</code></strong>, <strong><code>scan_dimensions</code></strong>, <strong><code>frame_dimensions</code></strong>, <strong><code>center</code></strong>, <strong><code>radius</code></strong>, <strong><code>bin</code></strong>=<em><code>1</code></em>)</p>
+<h4 id="sparse_to_dense_datacube_crop" class="doc_header"><code>sparse_to_dense_datacube_crop</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1666" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>sparse_to_dense_datacube_crop</code>(<strong><code>indices</code></strong>, <strong><code>counts</code></strong>, <strong><code>scan_dimensions</code></strong>, <strong><code>frame_dimensions</code></strong>, <strong><code>center</code></strong>, <strong><code>radius</code></strong>, <strong><code>bin</code></strong>=<em><code>1</code></em>)</p>
 </blockquote>
 
 </div>
@@ -145,13 +145,13 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7f99c855b370>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f99c855b370></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f99c855b370></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="Dispatcher object at 0x7fb133b79a40>" class="doc_header"><code>Dispatcher object at 0x7fb133b79a40></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Dispatcher object at 0x7fb133b79a40></code>(<strong>*<code>args</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
 </blockquote>
-<p>CUDA Kernel object. When called, the kernel object will specialize itself
-for the given arguments (if no suitable specialized version already exists)
-&amp; compute capability, and launch on the device associated with the current
-context.</p>
-<p>Kernel objects are not to be constructed by the user, but instead are
+<p>CUDA Dispatcher object. When configured and called, the dispatcher will
+specialize itself for the given arguments (if no suitable specialized
+version already exists) &amp; compute capability, and launch on the device
+associated with the current context.</p>
+<p>Dispatcher objects are not to be constructed by the user, but instead are
 created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 </div>
@@ -182,7 +182,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="sparse_to_dense_datacube_crop_gain_mask" class="doc_header"><code>sparse_to_dense_datacube_crop_gain_mask</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1336" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>sparse_to_dense_datacube_crop_gain_mask</code>(<strong><code>indices</code></strong>, <strong><code>counts</code></strong>, <strong><code>scan_dimensions</code></strong>, <strong><code>frame_dimensions</code></strong>, <strong><code>center_data</code></strong>, <strong><code>radius_data</code></strong>, <strong><code>radius_max</code></strong>, <strong><code>n_batches</code></strong>=<em><code>4</code></em>, <strong><code>binning</code></strong>=<em><code>1</code></em>, <strong><code>fftshift</code></strong>=<em><code>False</code></em>)</p>
+<h4 id="sparse_to_dense_datacube_crop_gain_mask" class="doc_header"><code>sparse_to_dense_datacube_crop_gain_mask</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1713" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>sparse_to_dense_datacube_crop_gain_mask</code>(<strong><code>indices</code></strong>, <strong><code>counts</code></strong>, <strong><code>scan_dimensions</code></strong>, <strong><code>frame_dimensions</code></strong>, <strong><code>center_data</code></strong>, <strong><code>radius_data</code></strong>, <strong><code>radius_max</code></strong>, <strong><code>n_batches</code></strong>=<em><code>4</code></em>, <strong><code>binning</code></strong>=<em><code>1</code></em>, <strong><code>fftshift</code></strong>=<em><code>False</code></em>)</p>
 </blockquote>
 
 </div>
@@ -213,13 +213,13 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7f99c855b3a0>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f99c855b3a0></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f99c855b3a0></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="Dispatcher object at 0x7fb133b79ae0>" class="doc_header"><code>Dispatcher object at 0x7fb133b79ae0></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Dispatcher object at 0x7fb133b79ae0></code>(<strong>*<code>args</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
 </blockquote>
-<p>CUDA Kernel object. When called, the kernel object will specialize itself
-for the given arguments (if no suitable specialized version already exists)
-&amp; compute capability, and launch on the device associated with the current
-context.</p>
-<p>Kernel objects are not to be constructed by the user, but instead are
+<p>CUDA Dispatcher object. When configured and called, the dispatcher will
+specialize itself for the given arguments (if no suitable specialized
+version already exists) &amp; compute capability, and launch on the device
+associated with the current context.</p>
+<p>Dispatcher objects are not to be constructed by the user, but instead are
 created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 </div>
@@ -250,13 +250,13 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7f99c855b3d0>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f99c855b3d0></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f99c855b3d0></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="Dispatcher object at 0x7fb133b79b80>" class="doc_header"><code>Dispatcher object at 0x7fb133b79b80></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Dispatcher object at 0x7fb133b79b80></code>(<strong>*<code>args</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
 </blockquote>
-<p>CUDA Kernel object. When called, the kernel object will specialize itself
-for the given arguments (if no suitable specialized version already exists)
-&amp; compute capability, and launch on the device associated with the current
-context.</p>
-<p>Kernel objects are not to be constructed by the user, but instead are
+<p>CUDA Dispatcher object. When configured and called, the dispatcher will
+specialize itself for the given arguments (if no suitable specialized
+version already exists) &amp; compute capability, and launch on the device
+associated with the current context.</p>
+<p>Dispatcher objects are not to be constructed by the user, but instead are
 created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 </div>
@@ -287,13 +287,13 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7f99c855b400>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f99c855b400></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f99c855b400></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="Dispatcher object at 0x7fb133b79c20>" class="doc_header"><code>Dispatcher object at 0x7fb133b79c20></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Dispatcher object at 0x7fb133b79c20></code>(<strong>*<code>args</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
 </blockquote>
-<p>CUDA Kernel object. When called, the kernel object will specialize itself
-for the given arguments (if no suitable specialized version already exists)
-&amp; compute capability, and launch on the device associated with the current
-context.</p>
-<p>Kernel objects are not to be constructed by the user, but instead are
+<p>CUDA Dispatcher object. When configured and called, the dispatcher will
+specialize itself for the given arguments (if no suitable specialized
+version already exists) &amp; compute capability, and launch on the device
+associated with the current context.</p>
+<p>Dispatcher objects are not to be constructed by the user, but instead are
 created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 </div>
@@ -324,13 +324,13 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7f99c855b430>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f99c855b430></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f99c855b430></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="Dispatcher object at 0x7fb133b79cc0>" class="doc_header"><code>Dispatcher object at 0x7fb133b79cc0></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Dispatcher object at 0x7fb133b79cc0></code>(<strong>*<code>args</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
 </blockquote>
-<p>CUDA Kernel object. When called, the kernel object will specialize itself
-for the given arguments (if no suitable specialized version already exists)
-&amp; compute capability, and launch on the device associated with the current
-context.</p>
-<p>Kernel objects are not to be constructed by the user, but instead are
+<p>CUDA Dispatcher object. When configured and called, the dispatcher will
+specialize itself for the given arguments (if no suitable specialized
+version already exists) &amp; compute capability, and launch on the device
+associated with the current context.</p>
+<p>Dispatcher objects are not to be constructed by the user, but instead are
 created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 </div>
@@ -354,7 +354,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="crop_symmetric_around_center" class="doc_header"><code>crop_symmetric_around_center</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1453" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>crop_symmetric_around_center</code>(<strong><code>old_frames</code></strong>, <strong><code>old_frame_dimensions</code></strong>, <strong><code>center_data</code></strong>, <strong><code>max_radius</code></strong>)</p>
+<h4 id="crop_symmetric_around_center" class="doc_header"><code>crop_symmetric_around_center</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1830" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>crop_symmetric_around_center</code>(<strong><code>old_frames</code></strong>, <strong><code>old_frame_dimensions</code></strong>, <strong><code>center_data</code></strong>, <strong><code>max_radius</code></strong>)</p>
 </blockquote>
 
 </div>
@@ -385,81 +385,13 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7f99c855b460>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f99c855b460></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f99c855b460></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="Dispatcher object at 0x7fb133b79d60>" class="doc_header"><code>Dispatcher object at 0x7fb133b79d60></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Dispatcher object at 0x7fb133b79d60></code>(<strong>*<code>args</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
 </blockquote>
-<p>CUDA Kernel object. When called, the kernel object will specialize itself
-for the given arguments (if no suitable specialized version already exists)
-&amp; compute capability, and launch on the device associated with the current
-context.</p>
-<p>Kernel objects are not to be constructed by the user, but instead are
-created using the :func:<code>numba.cuda.jit</code> decorator.</p>
-
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-    {% endraw %}
-
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-    {% endraw %}
-
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-<div class="output_markdown rendered_html output_subarea ">
-<h4 id="rotate" class="doc_header"><code>rotate</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1502" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>rotate</code>(<strong><code>frames</code></strong>, <strong><code>old_frame_dimensions</code></strong>, <strong><code>center</code></strong>, <strong><code>angle_rad</code></strong>)</p>
-</blockquote>
-
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-    {% endraw %}
-
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-</div>
-    {% endraw %}
-
-    {% raw %}
-    
-<div class="cell border-box-sizing code_cell rendered">
-
-<div class="output_wrapper">
-<div class="output">
-
-<div class="output_area">
-
-
-<div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7f99c855b490>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f99c855b490></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f99c855b490></code>(<strong>*<code>args</code></strong>)</p>
-</blockquote>
-<p>CUDA Kernel object. When called, the kernel object will specialize itself
-for the given arguments (if no suitable specialized version already exists)
-&amp; compute capability, and launch on the device associated with the current
-context.</p>
-<p>Kernel objects are not to be constructed by the user, but instead are
+<p>CUDA Dispatcher object. When configured and called, the dispatcher will
+specialize itself for the given arguments (if no suitable specialized
+version already exists) &amp; compute capability, and launch on the device
+associated with the current context.</p>
+<p>Dispatcher objects are not to be constructed by the user, but instead are
 created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 </div>
@@ -490,7 +422,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="sum_frames" class="doc_header"><code>sum_frames</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1527" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>sum_frames</code>(<strong><code>frames</code></strong>, <strong><code>counts</code></strong>, <strong><code>frame_dimensions</code></strong>)</p>
+<h4 id="rotate" class="doc_header"><code>rotate</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1879" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>rotate</code>(<strong><code>frames</code></strong>, <strong><code>old_frame_dimensions</code></strong>, <strong><code>center</code></strong>, <strong><code>angle_rad</code></strong>)</p>
 </blockquote>
 
 </div>
@@ -521,13 +453,81 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7f99c855b4c0>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f99c855b4c0></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f99c855b4c0></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="Dispatcher object at 0x7fb133b79e00>" class="doc_header"><code>Dispatcher object at 0x7fb133b79e00></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Dispatcher object at 0x7fb133b79e00></code>(<strong>*<code>args</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
 </blockquote>
-<p>CUDA Kernel object. When called, the kernel object will specialize itself
-for the given arguments (if no suitable specialized version already exists)
-&amp; compute capability, and launch on the device associated with the current
-context.</p>
-<p>Kernel objects are not to be constructed by the user, but instead are
+<p>CUDA Dispatcher object. When configured and called, the dispatcher will
+specialize itself for the given arguments (if no suitable specialized
+version already exists) &amp; compute capability, and launch on the device
+associated with the current context.</p>
+<p>Dispatcher objects are not to be constructed by the user, but instead are
+created using the :func:<code>numba.cuda.jit</code> decorator.</p>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4 id="sum_frames" class="doc_header"><code>sum_frames</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L1904" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>sum_frames</code>(<strong><code>frames</code></strong>, <strong><code>counts</code></strong>, <strong><code>frame_dimensions</code></strong>)</p>
+</blockquote>
+
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+</div>
+    {% endraw %}
+
+    {% raw %}
+    
+<div class="cell border-box-sizing code_cell rendered">
+
+<div class="output_wrapper">
+<div class="output">
+
+<div class="output_area">
+
+
+<div class="output_markdown rendered_html output_subarea ">
+<h4 id="Dispatcher object at 0x7fb133b79ea0>" class="doc_header"><code>Dispatcher object at 0x7fb133b79ea0></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Dispatcher object at 0x7fb133b79ea0></code>(<strong>*<code>args</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
+</blockquote>
+<p>CUDA Dispatcher object. When configured and called, the dispatcher will
+specialize itself for the given arguments (if no suitable specialized
+version already exists) &amp; compute capability, and launch on the device
+associated with the current context.</p>
+<p>Dispatcher objects are not to be constructed by the user, but instead are
 created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 </div>

@@ -40,13 +40,13 @@ nb_path: "nbs/60_loss_functions.ipynb"
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7f999fea9070>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f999fea9070></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f999fea9070></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="Dispatcher object at 0x7f1daa631ea0>" class="doc_header"><code>Dispatcher object at 0x7f1daa631ea0></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Dispatcher object at 0x7f1daa631ea0></code>(<strong>*<code>args</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
 </blockquote>
-<p>CUDA Kernel object. When called, the kernel object will specialize itself
-for the given arguments (if no suitable specialized version already exists)
-&amp; compute capability, and launch on the device associated with the current
-context.</p>
-<p>Kernel objects are not to be constructed by the user, but instead are
+<p>CUDA Dispatcher object. When configured and called, the dispatcher will
+specialize itself for the given arguments (if no suitable specialized
+version already exists) &amp; compute capability, and launch on the device
+associated with the current context.</p>
+<p>Dispatcher objects are not to be constructed by the user, but instead are
 created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 </div>
@@ -77,7 +77,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="prox_D_gaussian" class="doc_header"><code>prox_D_gaussian</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L2843" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>prox_D_gaussian</code>(<strong><code>z</code></strong>, <strong><code>z_hat</code></strong>, <strong><code>a</code></strong>, <strong><code>beta</code></strong>)</p>
+<h4 id="prox_D_gaussian" class="doc_header"><code>prox_D_gaussian</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L3714" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>prox_D_gaussian</code>(<strong><code>z</code></strong>, <strong><code>z_hat</code></strong>, <strong><code>a</code></strong>, <strong><code>beta</code></strong>)</p>
 </blockquote>
 <p>Proximal operator of the Gaussian log-likelihood.</p>
 <p>:param z:           D x K x My x Mx x 2, updated exit waves
@@ -114,13 +114,13 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7f999fea90a0>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f999fea90a0></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f999fea90a0></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="Dispatcher object at 0x7f1daa631f40>" class="doc_header"><code>Dispatcher object at 0x7f1daa631f40></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Dispatcher object at 0x7f1daa631f40></code>(<strong>*<code>args</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
 </blockquote>
-<p>CUDA Kernel object. When called, the kernel object will specialize itself
-for the given arguments (if no suitable specialized version already exists)
-&amp; compute capability, and launch on the device associated with the current
-context.</p>
-<p>Kernel objects are not to be constructed by the user, but instead are
+<p>CUDA Dispatcher object. When configured and called, the dispatcher will
+specialize itself for the given arguments (if no suitable specialized
+version already exists) &amp; compute capability, and launch on the device
+associated with the current context.</p>
+<p>Dispatcher objects are not to be constructed by the user, but instead are
 created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 </div>
@@ -151,7 +151,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="gradz_poisson_sparse" class="doc_header"><code>gradz_poisson_sparse</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L2897" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>gradz_poisson_sparse</code>(<strong><code>out</code></strong>, <strong><code>z</code></strong>, <strong><code>a_indices</code></strong>, <strong><code>a_counts</code></strong>)</p>
+<h4 id="gradz_poisson_sparse" class="doc_header"><code>gradz_poisson_sparse</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L3768" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>gradz_poisson_sparse</code>(<strong><code>out</code></strong>, <strong><code>z</code></strong>, <strong><code>a_indices</code></strong>, <strong><code>a_counts</code></strong>)</p>
 </blockquote>
 <p>Proximal operator of the Gaussian log-likelihood. Sparse version</p>
 <p>:param z:           D x K x My x Mx x 2, updated exit waves
@@ -189,13 +189,13 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7f999fea90d0>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f999fea90d0></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f999fea90d0></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="Dispatcher object at 0x7f1daa648040>" class="doc_header"><code>Dispatcher object at 0x7f1daa648040></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Dispatcher object at 0x7f1daa648040></code>(<strong>*<code>args</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
 </blockquote>
-<p>CUDA Kernel object. When called, the kernel object will specialize itself
-for the given arguments (if no suitable specialized version already exists)
-&amp; compute capability, and launch on the device associated with the current
-context.</p>
-<p>Kernel objects are not to be constructed by the user, but instead are
+<p>CUDA Dispatcher object. When configured and called, the dispatcher will
+specialize itself for the given arguments (if no suitable specialized
+version already exists) &amp; compute capability, and launch on the device
+associated with the current context.</p>
+<p>Dispatcher objects are not to be constructed by the user, but instead are
 created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 </div>
@@ -226,7 +226,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="gradz_gaussian_sparse" class="doc_header"><code>gradz_gaussian_sparse</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L2953" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>gradz_gaussian_sparse</code>(<strong><code>out</code></strong>, <strong><code>z</code></strong>, <strong><code>a_indices</code></strong>, <strong><code>a_counts</code></strong>)</p>
+<h4 id="gradz_gaussian_sparse" class="doc_header"><code>gradz_gaussian_sparse</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L3824" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>gradz_gaussian_sparse</code>(<strong><code>out</code></strong>, <strong><code>z</code></strong>, <strong><code>a_indices</code></strong>, <strong><code>a_counts</code></strong>)</p>
 </blockquote>
 <p>Proximal operator of the Gaussian log-likelihood. Sparse version</p>
 <p>:param z:           D x K x My x Mx x 2, updated exit waves
@@ -264,13 +264,13 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7f999fea9100>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f999fea9100></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f999fea9100></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="Dispatcher object at 0x7f1daa6480e0>" class="doc_header"><code>Dispatcher object at 0x7f1daa6480e0></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Dispatcher object at 0x7f1daa6480e0></code>(<strong>*<code>args</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
 </blockquote>
-<p>CUDA Kernel object. When called, the kernel object will specialize itself
-for the given arguments (if no suitable specialized version already exists)
-&amp; compute capability, and launch on the device associated with the current
-context.</p>
-<p>Kernel objects are not to be constructed by the user, but instead are
+<p>CUDA Dispatcher object. When configured and called, the dispatcher will
+specialize itself for the given arguments (if no suitable specialized
+version already exists) &amp; compute capability, and launch on the device
+associated with the current context.</p>
+<p>Dispatcher objects are not to be constructed by the user, but instead are
 created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 </div>
@@ -294,7 +294,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="sparse_amplitude_loss" class="doc_header"><code>sparse_amplitude_loss</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L2995" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>sparse_amplitude_loss</code>(<strong><code>a_model</code></strong>, <strong><code>indices_target</code></strong>, <strong><code>counts_target</code></strong>, <strong><code>frame_dimensions</code></strong>)</p>
+<h4 id="sparse_amplitude_loss" class="doc_header"><code>sparse_amplitude_loss</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L3866" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>sparse_amplitude_loss</code>(<strong><code>a_model</code></strong>, <strong><code>indices_target</code></strong>, <strong><code>counts_target</code></strong>, <strong><code>frame_dimensions</code></strong>)</p>
 </blockquote>
 <p>:param a_model:             K x M1 x M2
 :param indices_target:      K x num_max_counts
@@ -323,13 +323,13 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7f999fea9130>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f999fea9130></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f999fea9130></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="Dispatcher object at 0x7f1daa648180>" class="doc_header"><code>Dispatcher object at 0x7f1daa648180></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Dispatcher object at 0x7f1daa648180></code>(<strong>*<code>args</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
 </blockquote>
-<p>CUDA Kernel object. When called, the kernel object will specialize itself
-for the given arguments (if no suitable specialized version already exists)
-&amp; compute capability, and launch on the device associated with the current
-context.</p>
-<p>Kernel objects are not to be constructed by the user, but instead are
+<p>CUDA Dispatcher object. When configured and called, the dispatcher will
+specialize itself for the given arguments (if no suitable specialized
+version already exists) &amp; compute capability, and launch on the device
+associated with the current context.</p>
+<p>Dispatcher objects are not to be constructed by the user, but instead are
 created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 </div>
@@ -353,7 +353,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="sparse_smooth_truncated_amplitude_loss" class="doc_header"><code>sparse_smooth_truncated_amplitude_loss</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L3045" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>sparse_smooth_truncated_amplitude_loss</code>(<strong><code>a_model</code></strong>, <strong><code>indices_target</code></strong>, <strong><code>counts_target</code></strong>, <strong><code>frame_dimensions</code></strong>, <strong><code>eps</code></strong>=<em><code>0.1</code></em>)</p>
+<h4 id="sparse_smooth_truncated_amplitude_loss" class="doc_header"><code>sparse_smooth_truncated_amplitude_loss</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L3916" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>sparse_smooth_truncated_amplitude_loss</code>(<strong><code>a_model</code></strong>, <strong><code>indices_target</code></strong>, <strong><code>counts_target</code></strong>, <strong><code>frame_dimensions</code></strong>, <strong><code>eps</code></strong>=<em><code>0.1</code></em>)</p>
 </blockquote>
 <p>Smooth truncated amplitude loss from Chang et al., Overlapping Domain Decomposition Methods for Ptychographic Imaging, (2020)</p>
 <p>:param a_model:             K x M1 x M2
@@ -383,13 +383,13 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7f999fea9160>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f999fea9160></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f999fea9160></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="Dispatcher object at 0x7f1daa648220>" class="doc_header"><code>Dispatcher object at 0x7f1daa648220></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Dispatcher object at 0x7f1daa648220></code>(<strong>*<code>args</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
 </blockquote>
-<p>CUDA Kernel object. When called, the kernel object will specialize itself
-for the given arguments (if no suitable specialized version already exists)
-&amp; compute capability, and launch on the device associated with the current
-context.</p>
-<p>Kernel objects are not to be constructed by the user, but instead are
+<p>CUDA Dispatcher object. When configured and called, the dispatcher will
+specialize itself for the given arguments (if no suitable specialized
+version already exists) &amp; compute capability, and launch on the device
+associated with the current context.</p>
+<p>Dispatcher objects are not to be constructed by the user, but instead are
 created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 </div>
@@ -413,7 +413,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="sparse_smooth_truncated_amplitude_prox" class="doc_header"><code>sparse_smooth_truncated_amplitude_prox</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L3099" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>sparse_smooth_truncated_amplitude_prox</code>(<strong><code>a_model</code></strong>, <strong><code>indices_target</code></strong>, <strong><code>counts_target</code></strong>, <strong><code>frame_dimensions</code></strong>, <strong><code>eps</code></strong>=<em><code>0.5</code></em>, <strong><code>lam</code></strong>=<em><code>0.6</code></em>)</p>
+<h4 id="sparse_smooth_truncated_amplitude_prox" class="doc_header"><code>sparse_smooth_truncated_amplitude_prox</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L3970" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>sparse_smooth_truncated_amplitude_prox</code>(<strong><code>a_model</code></strong>, <strong><code>indices_target</code></strong>, <strong><code>counts_target</code></strong>, <strong><code>frame_dimensions</code></strong>, <strong><code>eps</code></strong>=<em><code>0.5</code></em>, <strong><code>lam</code></strong>=<em><code>0.6</code></em>)</p>
 </blockquote>
 <p>Smooth truncated amplitude loss from Chang et al., Overlapping Domain Decomposition Methods for Ptychographic Imaging, (2020)</p>
 <p>:param a_model:             K x M1 x M2
@@ -443,13 +443,13 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="AutoJitCUDAKernel object at 0x7f999fea9190>" class="doc_header"><code>AutoJitCUDAKernel object at 0x7f999fea9190></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>AutoJitCUDAKernel object at 0x7f999fea9190></code>(<strong>*<code>args</code></strong>)</p>
+<h4 id="Dispatcher object at 0x7f1daa6482c0>" class="doc_header"><code>Dispatcher object at 0x7f1daa6482c0></code><a href="" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>Dispatcher object at 0x7f1daa6482c0></code>(<strong>*<code>args</code></strong>, <strong>**<code>kwargs</code></strong>)</p>
 </blockquote>
-<p>CUDA Kernel object. When called, the kernel object will specialize itself
-for the given arguments (if no suitable specialized version already exists)
-&amp; compute capability, and launch on the device associated with the current
-context.</p>
-<p>Kernel objects are not to be constructed by the user, but instead are
+<p>CUDA Dispatcher object. When configured and called, the dispatcher will
+specialize itself for the given arguments (if no suitable specialized
+version already exists) &amp; compute capability, and launch on the device
+associated with the current context.</p>
+<p>Dispatcher objects are not to be constructed by the user, but instead are
 created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 </div>
@@ -473,7 +473,7 @@ created using the :func:<code>numba.cuda.jit</code> decorator.</p>
 
 
 <div class="output_markdown rendered_html output_subarea ">
-<h4 id="sparse_amplitude_prox" class="doc_header"><code>sparse_amplitude_prox</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L3146" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>sparse_amplitude_prox</code>(<strong><code>a_model</code></strong>, <strong><code>indices_target</code></strong>, <strong><code>counts_target</code></strong>, <strong><code>frame_dimensions</code></strong>, <strong><code>eps</code></strong>=<em><code>0.5</code></em>, <strong><code>lam</code></strong>=<em><code>0.6</code></em>)</p>
+<h4 id="sparse_amplitude_prox" class="doc_header"><code>sparse_amplitude_prox</code><a href="https://github.com/s-matrix/smpr3d/tree/master/smpr3d/util.py#L4017" class="source_link" style="float:right">[source]</a></h4><blockquote><p><code>sparse_amplitude_prox</code>(<strong><code>a_model</code></strong>, <strong><code>indices_target</code></strong>, <strong><code>counts_target</code></strong>, <strong><code>frame_dimensions</code></strong>, <strong><code>eps</code></strong>=<em><code>0.5</code></em>, <strong><code>lam</code></strong>=<em><code>0.6</code></em>)</p>
 </blockquote>
 <p>Smooth truncated amplitude loss from Chang et al., Overlapping Domain Decomposition Methods for Ptychographic Imaging, (2020)</p>
 <p>:param a_model:             K x M1 x M2
