@@ -581,6 +581,94 @@ class Sparse4DData:
 
         return res
 
+    def fill_missing_data_(self):
+        data = self
+        import sigpy as sp
+        import cupy as cp
+        from numba import cuda
+
+        empty_diffraction = np.sum(data.counts, 2) == 0
+        if empty_diffraction.sum() > 0:
+            empty_diffraction_indices = np.array(np.nonzero(empty_diffraction)).T
+            neighbors = np.stack([
+                empty_diffraction_indices + [1, 0],
+                empty_diffraction_indices + [1, 1],
+                empty_diffraction_indices + [0, 1],
+                empty_diffraction_indices + [-1, 0],
+                empty_diffraction_indices + [-1, -1],
+                empty_diffraction_indices + [0, -1],
+                empty_diffraction_indices + [1, -1],
+                empty_diffraction_indices + [-1, 1]
+            ])
+            eds = neighbors.shape
+            nb = neighbors.reshape((eds[0] * eds[1], 2))
+            nb[nb[:, 0] >= data.frame_dimensions[0], 0] = data.frame_dimensions[0] - 1
+            nb[nb[:, 1] >= data.frame_dimensions[1], 1] = data.frame_dimensions[1] - 1
+            nb[nb[:, 0] < 0, 0] = 0
+            nb[nb[:, 1] < 0, 1] = 0
+            cts_neighbors = data.counts[nb[:, 0], nb[:, 1]]
+            idx_neighbors = data.indices[nb[:, 0], nb[:, 1]]
+
+            @cuda.jit
+            def sparse_to_dense_datacube_kernel_crop(dc, indices, counts, frame_dimensions, no_count_indicator):
+                n = cuda.grid(1)
+                N, MYBIN, MXBIN = dc.shape
+                MY, MX = frame_dimensions
+                if n < N:
+                    for i in range(indices[n].shape[0]):
+                        idx1d = indices[n, i]
+                        my = int(idx1d // MX)
+                        mx = int(idx1d - my * MX)
+                        n = int(1.0 * n)
+                        if idx1d != no_count_indicator:
+                            cuda.atomic.add(dc, (n, my, mx), counts[n, i])
+
+
+            def sparse_to_dense_datacube_crop(indices, counts, frame_dimensions):
+                xp = sp.backend.get_array_module(indices)
+                dc = xp.zeros((indices.shape[0], *frame_dimensions), dtype=counts.dtype)
+                print(dc.shape)
+                threadsperblock = (128,)
+                blockspergrid = tuple(np.ceil(np.array(indices.shape[0]) / threadsperblock).astype(np.int))
+                no_count_indicator = np.iinfo(indices.dtype).max
+                sparse_to_dense_datacube_kernel_crop[blockspergrid, threadsperblock](dc, indices, counts,
+                                                                                     xp.array(frame_dimensions),
+                                                                                     no_count_indicator)
+                return dc
+
+
+            @cuda.jit
+            def dense_to_sparse_kernel(dense, indices, counts, frame_dimensions):
+                n = cuda.grid(1)
+                N, MYBIN, MXBIN = dense.shape
+                MY, MX = frame_dimensions
+                if n < N:
+                    k = 0
+                    for mx in range(MX):
+                        for my in range(MY):
+                            idx1d = my * MX + mx
+                            if dense[n, my, mx] > 0:
+                                indices[n, k] = idx1d
+                                counts[n, k] = dense[n, my, mx]
+                                k += 1
+
+
+            dense = sparse_to_dense_datacube_crop(cp.array(idx_neighbors), cp.array(cts_neighbors).astype(np.float32),
+                                                  data.frame_dimensions)
+            dense = dense.reshape((eds[0], eds[1], *data.frame_dimensions))
+            replace = cp.round_(cp.mean(dense, 0)).astype(cp.uint8)
+
+            indices_replace = cp.zeros((eds[1], data.counts.shape[2]), dtype=data.indices.dtype)
+            indices_replace[:] = np.iinfo(data.indices.dtype).max
+            counts_replace = cp.zeros((eds[1], data.counts.shape[2]), dtype=data.counts.dtype)
+            threadsperblock = (128,)
+            blockspergrid = tuple(np.ceil(np.array(eds[1]) / threadsperblock).astype(np.int))
+            dense_to_sparse_kernel[blockspergrid, threadsperblock](replace, indices_replace, counts_replace,
+                                                                   cp.array(data.frame_dimensions))
+            replace_inds = empty_diffraction_indices.T
+            data.counts[replace_inds[0], replace_inds[1], :] = counts_replace.get()
+            data.indices[replace_inds[0], replace_inds[1], :] = indices_replace.get()
+
     @staticmethod
     def rebin(sparse_data: Sparse4DData, bin_factor : int, n_batches=4) -> Sparse4DData:
         dense = sparse_to_dense_datacube_crop_gain_mask(sparse_data.indices, sparse_data.counts.astype(np.int16), sparse_data.scan_dimensions,

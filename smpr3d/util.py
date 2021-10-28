@@ -1543,7 +1543,7 @@ def sparse_to_dense_datacube_crop_gain_mask(indices, counts, scan_dimensions, fr
     K = indices.shape[0]
     divpts = array_split_divpoints_ntotal(K, n_batches)
     K_batch = [divpts[i] - divpts[i - 1] for i in range(1, n_batches + 1)]
-    dc0 = np.zeros((scan_dimensions[0], scan_dimensions[1], frame_size, frame_size), dtype=np.uint8)
+    dc0 = np.zeros((scan_dimensions[0], scan_dimensions[1], frame_size, frame_size), dtype=np.int16)
 
     for b in range(n_batches):
         dc = th.zeros((K_batch[b], scan_dimensions[1], frame_size, frame_size), dtype=th.float32, device=dev)
@@ -1561,7 +1561,7 @@ def sparse_to_dense_datacube_crop_gain_mask(indices, counts, scan_dimensions, fr
                                                                                                center_frame, center,
                                                                                                radius_data_int, binning,
                                                                                                fftshift)
-        dc0[divpts[b]:divpts[b + 1], ...] = dc.cpu().type(th.uint8).numpy()
+        dc0[divpts[b]:divpts[b + 1], ...] = dc.cpu().type(th.int16).numpy()
 
     cuda.select_device(0)
     return dc0
