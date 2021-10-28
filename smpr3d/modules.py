@@ -9,7 +9,7 @@ import numpy as np
 import math as m
 import numba.cuda as cuda
 import torch.nn as nn
-from .util import generate_angular_spectrum_kernel, convolve_kernel
+from .operators import generate_angular_spectrum_kernel, convolve_kernel
 th.autograd.set_detect_anomaly(True)
 
 # Cell

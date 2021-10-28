@@ -4,556 +4,179 @@
 from __future__ import annotations
 
 
-__all__ = ['Metadata4D', 'get_CoM', 'get_probe_size', 'Sparse4DData', 'ReconstructionOptions', 'SMeta']
+__all__ = ['ReconstructionOptions', 'reconstruct_smatrix']
 
 # Cell
-from ncempy.io.dm import fileDM
-from .torch_imports import *
-from .util import *
-from skimage.filters import gaussian
-import numpy as np
-import h5py
 #nbdev_comment from __future__ import annotations
-import sigpy as sp
-from fastcore.basics import *
-from numba import cuda
-
-# Cell
-class Metadata4D:
-
-    __repr__= basic_repr(['scan_step', 'pixel_step', 'k_max', 'alpha_rad', 'rotation_deg', 'E_ev', 'wavelength',
-                          'aberrations'])
-
-    def __init__(self, E_ev=None, ):
-        self.scan_step = np.array([0,0])
-        self.k_max = np.array([0,0])
-        self.alpha_rad = -1
-        self.rotation_deg = 0
-        self.E_ev = E_ev
-        self.wavelength = -1
-        self.aberrations = np.zeros((12,))
-        self.pixel_step = np.array([0,0])
-
-    @staticmethod
-    def from_dm4_file(filename):
-        m = Metadata4D()
-
-        with fileDM(filename) as f:
-            m.E_ev = f.allTags['.ImageList.2.ImageTags.Microscope Info.Voltage']
-            m.scan_step = np.array(f.scale[-2:]) * 10
-        m.wavelength = wavelength(m.E_ev)
-        return m
-
-    def to_h5(self, file_path, key):
-        with h5py.File(file_path, 'a') as f:
-            g = f.create_group(key)
-            g.create_dataset('scan_step', data=self.scan_step)
-            g.create_dataset('k_max', data=self.k_max)
-            g.create_dataset('alpha_rad', data=self.alpha_rad)
-            g.create_dataset('rotation_deg', data=self.rotation_deg)
-            g.create_dataset('E_ev', data=self.E_ev)
-            g.create_dataset('wavelength', data=self.wavelength)
-            g.create_dataset('aberrations', data=self.aberrations)
-            g.create_dataset('pixel_step', data=self.pixel_step)
-
-    @staticmethod
-    def from_h5(file_path, key):
-        res = Metadata4D()
-        with h5py.File(file_path, 'r') as f:
-            g = f[key]
-            res.scan_step = g['scan_step'][...]
-            res.pixel_step = g['pixel_step'][...]
-            res.k_max = g['k_max'][...]
-            res.alpha_rad = g['alpha_rad'][()]
-            res.rotation_deg = g['rotation_deg'][()]
-            res.E_ev = g['E_ev'][()]
-            res.wavelength = g['wavelength'][()]
-            res.aberrations = g['aberrations'][...]
-        return res
-
-
-# Cell
-#from py4DSTEM
-def get_CoM(ar):
-    """
-    Finds and returns the center of mass of array ar.
-    """
-    nx, ny = np.shape(ar)
-    ry, rx = np.meshgrid(np.arange(ny), np.arange(nx))
-    tot_intens = np.sum(ar)
-    xCoM = np.sum(rx * ar) / tot_intens
-    yCoM = np.sum(ry * ar) / tot_intens
-    return xCoM, yCoM
-
-#from py4DSTEM
-def get_probe_size(DP, thresh_lower=0.01, thresh_upper=0.99, N=100):
-    """
-    Gets the center and radius of the probe in the diffraction plane.
-
-    The algorithm is as follows:
-    First, create a series of N binary masks, by thresholding the diffraction pattern DP with a
-    linspace of N thresholds from thresh_lower to thresh_upper, measured relative to the maximum
-    intensity in DP.
-    Using the area of each binary mask, calculate the radius r of a circular probe.
-    Because the central disk is typically very intense relative to the rest of the DP, r should
-    change very little over a wide range of intermediate values of the threshold. The range in which
-    r is trustworthy is found by taking the derivative of r(thresh) and finding identifying where it
-    is small.  The radius is taken to be the mean of these r values.
-    Using the threshold corresponding to this r, a mask is created and the CoM of the DP times this
-    mask it taken.  This is taken to be the origin x0,y0.
-
-    Accepts:
-        DP              (2D array) the diffraction pattern in which to find the central disk.
-                        A position averaged, or shift-corrected and averaged, DP work well.
-        thresh_lower    (float, 0 to 1) the lower limit of threshold values
-        thresh_upper    (float, 0 to 1) the upper limit of threshold values
-        N               (int) the number of thresholds / masks to use
-
-    Returns:
-        r               (float) the central disk radius, in pixels
-        x0              (float) the x position of the central disk center
-        y0              (float) the y position of the central disk center
-    """
-    thresh_vals = np.linspace(thresh_lower,thresh_upper,N)
-    r_vals = np.zeros(N)
-
-    # Get r for each mask
-    DPmax = np.max(DP)
-    for i in range(len(thresh_vals)):
-        thresh = thresh_vals[i]
-        mask = DP > DPmax*thresh
-        r_vals[i] = np.sqrt(np.sum(mask)/np.pi)
-
-    # Get derivative and determine trustworthy r-values
-    dr_dtheta = np.gradient(r_vals)
-    mask = (dr_dtheta <= 0) * (dr_dtheta >= 2*np.median(dr_dtheta))
-    r = np.mean(r_vals[mask])
-
-    # Get origin
-    thresh = np.mean(thresh_vals[mask])
-    mask = DP > DPmax*thresh
-    x0,y0 = get_CoM(DP*mask)
-
-    return r,x0,y0
-
-class Sparse4DData:
-    __repr__=basic_repr(['scan_dimensions', 'frame_dimensions'])
-    def __init__(self):
-        self.indices = None
-        self.counts = None
-        self.scan_dimensions = None
-        self.frame_dimensions = None
-
-    @staticmethod
-    def from_4Dcamera_file(filename, slice=None):
-        with h5py.File(filename, 'r') as f0:
-            frames = f0['electron_events/frames'][:]
-            scan_dimensions = (f0['electron_events/scan_positions'].attrs['Ny'],
-                               f0['electron_events/scan_positions'].attrs['Nx'])
-            frame_dimensions = np.array((576, 576))
-
-        def unragged_frames_size(frames):
-            mm = 0
-            for ev in frames:
-                if ev.shape[0] > mm:
-                    mm = ev.shape[0]
-            return mm
-
-        def make_unragged_frames(frames, scan_dimensions):
-            unragged_frame_size = unragged_frames_size(frames.ravel())
-            fr_full = np.zeros((frames.ravel().shape[0], unragged_frame_size), dtype=np.int32)
-            fr_full[:] = np.iinfo(fr_full.dtype).max
-            for ii, ev in enumerate(frames.ravel()):
-                fr_full[ii, :ev.shape[0]] = ev
-            fr_full_4d = fr_full.reshape((*scan_dimensions, fr_full.shape[1]))
-            fr_full_4d = fr_full_4d[:, :-1, :]
-            return fr_full_4d
-
-        d = Sparse4DData()
-        d.indices = np.ascontiguousarray(make_unragged_frames(frames.ravel(), scan_dimensions))
-        if slice is not None:
-            d.indices = d.indices[slice]
-        d.scan_dimensions = np.array(d.indices.shape[:2])
-        d.frame_dimensions = frame_dimensions
-        d.counts = np.zeros(d.indices.shape, dtype=np.bool)
-        d.counts[d.indices != np.iinfo(d.indices.dtype).max] = 1
-
-        return d
-
-    def crop_symmetric_center_(self, center, max_radius = None):
-        if max_radius is None:
-            y_min_radius = np.min([center[0], self.frame_dimensions[0] - center[0]])
-            x_min_radius = np.min([center[1], self.frame_dimensions[1] - center[1]])
-            max_radius = np.min([y_min_radius, x_min_radius])
-        inds = sp.to_device(self.indices,0)
-        frame_dimensions = sp.to_device(self.frame_dimensions, 0)
-        xp = sp.backend.get_array_module(inds)
-        new_frames, new_frame_dimensions = crop_symmetric_around_center(inds,frame_dimensions, center, max_radius)
-        print(f'old frames shape: {self.indices.shape}')
-        print(f'new frames shape: {new_frames.shape}')
-        print(f'old frames frame_dimensions: {self.frame_dimensions}')
-        print(f'new frames frame_dimensions: {new_frame_dimensions}')
-        self.indices = new_frames
-        self.counts = np.zeros(self.indices.shape, dtype=np.bool)
-        self.counts[self.indices != np.iinfo(self.indices.dtype).max] = 1
-        self.frame_dimensions = new_frame_dimensions
-
-    def crop_symmetric_center(self, center, max_radius = None, verbose = True):
-        if max_radius is None:
-            y_min_radius = np.min([center[0], self.frame_dimensions[0] - center[0]])
-            x_min_radius = np.min([center[1], self.frame_dimensions[1] - center[1]])
-            max_radius = np.min([y_min_radius, x_min_radius])
-        inds = sp.to_device(self.indices,0)
-        xp = sp.backend.get_array_module(inds)
-        frame_dims = xp.array(self.frame_dimensions)
-        new_frames, new_frame_dimensions = crop_symmetric_around_center(inds, frame_dims, center, max_radius)
-        if verbose:
-            print(f'old frames shape: {self.indices.shape}')
-            print(f'new frames shape: {new_frames.shape}')
-            print(f'old frames frame_dimensions: {self.frame_dimensions}')
-            print(f'new frames frame_dimensions: {new_frame_dimensions}')
-        res = Sparse4DData()
-        res.indices = new_frames
-        res.counts = np.zeros(self.indices.shape, dtype=np.bool)
-        res.counts[self.indices != np.iinfo(self.indices.dtype).max] = 1
-        res.frame_dimensions = new_frame_dimensions
-        res.scan_dimensions = self.scan_dimensions.copy()
-        return res
-
-    def rotate_(self, angle_rad, center=None):
-        if center is None:
-            center = self.frame_dimensions // 2
-        new_indices = rotate(self.indices, self.frame_dimensions, center, angle_rad)
-        self.indices = new_indices
-
-    def rotate(self, angle_rad, center=None):
-        if center is None:
-            center = self.frame_dimensions // 2
-        new_indices = rotate(self.indices, self.frame_dimensions, center, angle_rad)
-        res = Sparse4DData()
-        res.indices = new_indices
-        res.counts = self.counts.copy()
-        res.frame_dimensions = self.frame_dimensions
-        res.scan_dimensions = self.scan_dimensions.copy()
-        return res
-
-    def sum_diffraction(self):
-        res = sum_frames(self.indices, self.counts, self.frame_dimensions)
-        return res
-
-    @staticmethod
-    def _determine_center_and_radius(data : Sparse4DData, manual=False, size=25, threshold=3e-1):
-        sh = np.concatenate([data.scan_dimensions,data.frame_dimensions])
-        c = np.zeros((2,))
-        c[:] = (sh[-1] // 2, sh[-2] // 2)
-        radius = np.ones((1,)) * sh[-1] // 2
-        inds = sp.to_device(data.indices[:size, :size].astype(np.uint32),0)
-        cts = sp.to_device(data.counts[:size, :size].astype(np.uint32),0)
-        xp = sp.backend.get_array_module(inds)
-        dc_subset = sparse_to_dense_datacube_crop(inds,cts, (size,size), data.frame_dimensions, c, radius, bin=2)
-        dcs = xp.sum(dc_subset, (0, 1))
-        m1 = dcs.get()
-        m = (gaussian(m1.astype(np.float32),2) > m1.max() * threshold).astype(np.float)
-        r, y0, x0 = get_probe_size(m)
-        return 2 * np.array([y0,x0]), r*2
-
-    def determine_center_and_radius(self, manual=False, size=25, threshold=3e-1):
-        return Sparse4DData._determine_center_and_radius(self, manual, size=size, threshold=threshold)
-
-    def to_dense(self, bin_factor, n_batches=4):
-        dense = sparse_to_dense_datacube_crop_gain_mask(self.indices, self.counts.astype(np.int16), self.scan_dimensions,
-                                                self.frame_dimensions, self.frame_dimensions/2, self.frame_dimensions[0]/2,
-                                                self.frame_dimensions[0]/2, binning=bin_factor, n_batches=n_batches, fftshift=False)
-        return dense
-
-    @staticmethod
-    def from_dense(dense, make_float = False, n_batches=1):
-        res = Sparse4DData()
-        res.frame_dimensions = np.array(dense.shape[-2:])
-        res.scan_dimensions = np.array(dense.shape[:2])
-
-        cuda.select_device(1)
-        dev = th.device('cuda:1')
-
-        inds = np.prod(res.frame_dimensions)
-        if inds > 2**31:
-            dtype = th.int64
-        elif inds > 2**15:
-            dtype = th.int32
-        elif inds > 2**8:
-            dtype = th.int16
-        else:
-            dtype = th.uint8
-
-        nonzeros = np.sum((dense > 0),(2,3))
-        nonzeros = np.max(nonzeros)
-
-        bits_counts = np.log2(dense.max())
-        if make_float:
-            dtype_counts = th.float32
-        else:
-            if bits_counts > np.log2(2**31-1):
-                dtype_counts = th.int64
-            elif bits_counts > np.log2(2**15-1):
-                dtype_counts = th.int32
-            elif bits_counts > 8:
-                dtype_counts = th.int16
-            else:
-                dtype_counts = th.uint8
-
-        print(f'Using dtype: {dtype} for indices')
-        print(f'Using dtype: {dtype_counts} for counts')
-
-        threadsperblock = (16, 16)
-        blockspergrid = tuple(np.ceil(res.scan_dimensions / threadsperblock).astype(np.int))
-
-        ds = dense.shape
-        K = dense.shape[0]
-        divpts = array_split_divpoints_ntotal(K, n_batches)
-
-        dense = th.as_tensor(dense)
-        indices = th.zeros((*dense.shape[:2], nonzeros), dtype=dtype)
-        counts = th.zeros((*dense.shape[:2], nonzeros), dtype=dtype_counts)
-
-        indices[:] = th.iinfo(dtype).max
-        fd = th.tensor(res.frame_dimensions).to(dev)
-        for b in range(n_batches):
-
-            denseb = dense[divpts[b]:divpts[b + 1]].to(dev)
-            indicesb = indices[divpts[b]:divpts[b + 1]].to(dev)
-            indicesb[:] = th.iinfo(dtype).max
-            countsb = counts[divpts[b]:divpts[b + 1]].to(dev)
-
-            dense_to_sparse_kernel[blockspergrid, threadsperblock](denseb, indicesb, countsb, fd)
-
-            counts[divpts[b]:divpts[b + 1]] = countsb.cpu()
-            indices[divpts[b]:divpts[b + 1]] = indicesb.cpu()
-
-        res.indices = indices.numpy()
-        res.counts = counts.numpy()
-
-        print(f'frame_dimensions: {res.frame_dimensions}')
-        print(f'scan_dimensions : {res.scan_dimensions}')
-
-        cuda.select_device(0)
-
-        return res
-
-    @staticmethod
-    def rebin(sparse_data: Sparse4DData, bin_factor : int, n_batches=4) -> Sparse4DData:
-        dense = sparse_to_dense_datacube_crop_gain_mask(sparse_data.indices, sparse_data.counts.astype(np.int16), sparse_data.scan_dimensions,
-                                                sparse_data.frame_dimensions, sparse_data.frame_dimensions/2, sparse_data.frame_dimensions[0]/2,
-                                                sparse_data.frame_dimensions[0]/2, binning=bin_factor, n_batches=n_batches, fftshift=False)
-        sparse = Sparse4DData.from_dense(dense)
-        return sparse
-
-    @staticmethod
-    def fftshift(sparse_data: Sparse4DData) -> Sparse4DData:
-        indices = sparse_data.indices
-        scan_dimensions = sparse_data.scan_dimensions
-        frame_dimensions = sparse_data.frame_dimensions
-        center_frame = frame_dimensions / 2
-
-        threadsperblock = (16, 16)
-        blockspergrid = tuple(np.ceil(np.array(indices.shape[:2]) / threadsperblock).astype(np.int))
-
-        no_count_indicator = np.iinfo(indices.dtype).max
-
-        inds = sp.to_device(indices, 0)
-        center_frame = sp.to_device(center_frame, 0)
-        scan_dimensions = sp.to_device(scan_dimensions, 0)
-
-        fftshift_kernel[blockspergrid, threadsperblock](inds, center_frame, scan_dimensions, no_count_indicator)
-
-        res = Sparse4DData()
-        res.indices = inds.get()
-        res.counts = sparse_data.counts.copy()
-        res.scan_dimensions = sparse_data.scan_dimensions.copy()
-        res.frame_dimensions = sparse_data.frame_dimensions.copy()
-
-        return res
-
-    @staticmethod
-    def fftshift_and_pad_to(sparse_data: Sparse4DData, pad_to_frame_dimensions) -> Sparse4DData:
-        indices = sparse_data.indices
-        scan_dimensions = sparse_data.scan_dimensions
-        frame_dimensions = sparse_data.frame_dimensions
-        center_frame = frame_dimensions / 2
-
-        threadsperblock = (16, 16)
-        blockspergrid = tuple(np.ceil(np.array(indices.shape[:2]) / threadsperblock).astype(np.int))
-
-        no_count_indicator_old = np.iinfo(indices.dtype).max
-        center_frame = sp.to_device(center_frame,0)
-        xp = sp.backend.get_array_module(center_frame)
-
-        inds = np.prod(pad_to_frame_dimensions)
-        if inds > 2**15:
-            dtype = xp.int64
-        elif inds > 2**15:
-            dtype = xp.int32
-        elif inds > 2**8:
-            dtype = xp.int16
-        else:
-            dtype = xp.uint8
-
-        no_count_indicator_new = xp.iinfo(dtype).max
-
-        inds = sp.to_device(indices,0).astype(dtype)
-        pad_to_frame_dimensions = sp.to_device(pad_to_frame_dimensions,0)
-
-        scan_dimensions = sp.to_device(scan_dimensions,0)
-
-        fftshift_pad_kernel[blockspergrid, threadsperblock](inds, center_frame, scan_dimensions,  pad_to_frame_dimensions,
-                                                            no_count_indicator_old, no_count_indicator_new)
-        sparse_data.indices = inds.get()
-        sparse_data.frame_dimensions = pad_to_frame_dimensions.get()
-        return sparse_data
-
-    def fftshift_(self):
-        indices = self.indices
-        scan_dimensions = self.scan_dimensions
-        frame_dimensions = self.frame_dimensions
-        center_frame = frame_dimensions / 2
-
-        threadsperblock = (16, 16)
-        blockspergrid = tuple(np.ceil(np.array(indices.shape[:2]) / threadsperblock).astype(np.int))
-
-        no_count_indicator = np.iinfo(indices.dtype).max
-
-        inds = sp.to_device(indices, 0)
-        center_frame = sp.to_device(center_frame, 0)
-        scan_dimensions = sp.to_device(scan_dimensions, 0)
-
-        fftshift_kernel[blockspergrid, threadsperblock](inds, center_frame, scan_dimensions, no_count_indicator)
-        self.indices = inds.get()
-        return self
-
-    def fftshift_and_pad_to_(self, pad_to_frame_dimensions):
-        return Sparse4DData.fftshift_and_pad_to(self, pad_to_frame_dimensions)
-
-    def bin(self, binning_factor, n_batches=4):
-        res = Sparse4DData.rebin(self, binning_factor, n_batches=n_batches)
-        return res
-
-    def virtual_annular_image(self, inner_radius, outer_radius, center):
-        inds = sp.to_device(self.indices, 0)
-        xp = sp.backend.get_array_module(inds)
-        cts = xp.array(self.counts, dtype=xp.uint32)
-        ctr = xp.array(center)
-        frame_dims = xp.array(self.frame_dimensions)
-        img = xp.zeros(tuple(self.scan_dimensions), dtype=xp.uint32)
-        no_count_indicator = xp.iinfo(self.indices.dtype).max
-        threadsperblock = (16, 16)
-        blockspergrid = tuple(np.ceil(np.array(self.indices.shape[:2]) / threadsperblock).astype(np.int))
-        virtual_annular_image_kernel[blockspergrid, threadsperblock](img, inds, cts, inner_radius, outer_radius, ctr,
-                                                                     frame_dims, no_count_indicator)
-        return img.get()
-
-    def fluence(self, dr):
-        sum_electrons = self.counts.sum()
-        area = np.prod(self.scan_dimensions) * dr**2
-        return sum_electrons/area
-
-    def flux(self, dr, dwell_time):
-        fluence = self.fluence(dr)
-        flux = fluence / (np.prod(self.scan_dimensions) * dwell_time)
-        return flux
-
-    def slice(self, slice):
-        res = Sparse4DData()
-        res.indices = np.ascontiguousarray(self.indices[slice])
-        res.counts = np.ascontiguousarray(self.counts[slice])
-        res.scan_dimensions = np.array(res.counts.shape[:2])
-        res.frame_dimensions = self.frame_dimensions.copy()
-        return res
-
-    def center_of_mass(self: Sparse4DData):
-        qx, qy = np.meshgrid(np.arange(self.scan_dimensions[0]),np.arange(self.scan_dimensions[1]))
-        comx = th.zeros(tuple(self.scan_dimensions), dtype=th.float32)
-        comy = th.zeros(tuple(self.scan_dimensions), dtype=th.float32)
-
-        no_count_indicator = np.iinfo(self.indices.dtype).max
-
-        mass = np.sum(self.counts,2)
-
-        threadsperblock = (16, 16)
-        blockspergrid = tuple(np.ceil(np.array(self.indices.shape[:2]) / threadsperblock).astype(np.int))
-
-        qx = th.tensor(qx).to(th.float32)
-        qy = th.tensor(qy).to(th.float32)
-        center_of_mass_kernel[blockspergrid, threadsperblock](comx, comy, th.tensor(self.indices), th.tensor(self.counts.astype(np.float32)),
-                                                              th.tensor(self.frame_dimensions), no_count_indicator, qx, qy)
-        comy = comy.get()
-        comx = comx.get()
-        comx /= mass + 1e-6
-        comy /= mass + 1e-6
-        comy[comy==0] = np.mean(comy[comy!=0])
-        comx[comx==0] = np.mean(comx[comx!=0])
-        comx -= np.mean(comx)
-        comy -= np.mean(comy)
-        return comy, comx
-
-    def to_h5(self, file_path, key):
-        with h5py.File(file_path, 'a') as f:
-            g = f.create_group(key)
-            g.create_dataset('counts', data=self.counts, compression="gzip", compression_opts=7)
-            g.create_dataset('indices', data=self.indices, compression="gzip", compression_opts=7)
-            g.create_dataset('frame_dimensions', data=self.frame_dimensions)
-            g.create_dataset('scan_dimensions', data=self.scan_dimensions)
-
-    @staticmethod
-    def from_h5(file_path, key):
-        res = Sparse4DData()
-        with h5py.File(file_path, 'r') as f:
-            g = f[key]
-            res.counts = g['counts'][...]
-            res.indices = g['indices'][...]
-            res.frame_dimensions = g['frame_dimensions'][...]
-            res.scan_dimensions = g['scan_dimensions'][...]
-        return res
-
-# Cell
-
-class ReconstructionOptions:
-    def __init__(self):
-        pass
-
-# Cell
+from .util import fourier_coordinates_2D, imsave, array_split_divpoints_ntotal
+import matplotlib.pyplot as plt
+from typing import TYPE_CHECKING, List, NamedTuple, Optional, Union, Callable
 from .util import fourier_coordinates_2D
 import torch as th
 import numpy as np
 from numpy.fft import fftshift
+from dataclasses import dataclass
+from torch.utils.data import BatchSampler, SequentialSampler
+from .util import advanced_raster_scan, ZernikeProbeSingle, beamlet_samples, natural_neighbor_weights
+from numpy.fft import fftfreq
+from .algorithm import admm, ADMMOptions
+from .data import LinearIndexEncoded4DDataset, Dense4DDataset, Metadata4D
 
-class SMeta:
-    def __init__(self, take_beams, dx, S_shape, MY, MX, device):
-        self.f = S_shape[1:] / np.array([MY, MX])
-        self.S_shape = S_shape
-        self.q = th.as_tensor(fourier_coordinates_2D(S_shape[1:], dx.numpy(), centered=False), device=device)
-        self.qf = th.as_tensor(fourier_coordinates_2D([MY, MX], dx.numpy(), centered=False), device=device)
-        self.q2 = th.norm(self.q, dim=0) ** 2
-        self.qf2 = th.norm(self.qf, dim=0) ** 2
-        self.q_coords = th.from_numpy(
-            fftshift(np.array(np.mgrid[-MY // 2:MY // 2, -MX // 2:MX // 2]), (1, 2))).to(device)
-        self.r_indices = th.from_numpy(np.mgrid[:MY, :MX]).to(device)
-        self.take_beams = take_beams.to(device)
+# Cell
 
-        B = th.sum(take_beams).item()
-        self.beam_numbers = th.ones_like(take_beams, dtype=th.long, device=device) * -1
-        self.beam_numbers[take_beams] = th.arange(0, B, device=device)
-        self.q_b = th.stack([self.qf[0,take_beams],self.qf[1,take_beams]]).T
-        self.q_b_coords = th.from_numpy(np.mgrid[:MY, :MX]).to(device)
-        self.q_dft = th.from_numpy(fourier_coordinates_2D([MY, MX], [1, 1], centered=False)).to(device)
+@dataclass
+class ReconstructionOptions:
+    algorithm : str
+    algorithm_options : ADMMOptions
+    compute_device : List[th.device]
+    auxiliary_variable_device : th.device
+    n_iter : int
+    n_batches : int
+    radius : float
+    n_angular_samples : int
+    n_radial_samples : int
 
-        #S_shape          array (3,)
-        #q              (NY, NX) x
-        #qf             (MY, MX) x
-        #q2             (NY, NX) x
-        #q2f            (MY, MX) x
-        #f              (2,)
-        #q_coords       (MY, MX)
-        #r_indices      (NY, NX)
-        #take_beams     (MY, MX)
-        #beam_numbers   (MY, MX)
-        #q_b            (B, 2)
-        #q_b_coords     (B, 2)
+    def __init__(self, algorithm = 'admm',
+                 algorithm_options = ADMMOptions(),
+                 compute_device = [th.device(f'cuda:{i}') for i in [0]],
+                 auxiliary_variable_device = th.device(f'cpu'),
+                 n_iter = 20,
+                 n_batches = 20,
+                 radius = 15,
+                 n_angular_samples = 6,
+                 n_radial_samples = 4,):
+        self.algorithm = algorithm
+        self.algorithm_options = algorithm_options
+        self.compute_device = compute_device
+        self.auxiliary_variable_device = auxiliary_variable_device
+        self.n_iter = n_iter
+        self.n_batches = n_batches
+        self.radius = radius
+        self.n_angular_samples = n_angular_samples
+        self.n_radial_samples = n_radial_samples
+
+
+
+
+# Cell
+
+
+from .algorithm import SMPRSolution
+from .data import SMeta
+def reconstruct_smatrix(data : Union[LinearIndexEncoded4DDataset, Dense4DDataset],
+                        vacuum_probe_dataset : Union[LinearIndexEncoded4DDataset, Dense4DDataset],
+                        metadata : Metadata4D,
+                        options : ReconstructionOptions) -> SMPRSolution:
+
+    r = advanced_raster_scan(data.scan_dimensions[0],
+                             data.scan_dimensions[1],
+                             fast_axis=1,
+                             mirror=[1, 1],
+                             theta=metadata.rotation_deg,
+                             dy=metadata.pixel_step[0],
+                             dx=metadata.pixel_step[1])
+
+    sampler = BatchSampler(SequentialSampler(range(len(vacuum_probe_dataset))), batch_size=len(vacuum_probe_dataset), drop_last=False)
+    vacuum_probe_intensities = 0
+    max_intensity = 0
+    if isinstance(vacuum_probe_dataset, Dense4DDataset):
+        for batch_inds in sampler:
+            max_batch = th.max(th.sum(vacuum_probe_dataset[batch_inds], dim=(1,2)))
+            if max_batch > max_intensity:
+                max_intensity = max_batch.item()
+            print(max_intensity)
+            vacuum_probe_intensities += th.sum(vacuum_probe_dataset[batch_inds], dim=(0,))
+    elif isinstance(vacuum_probe_dataset, LinearIndexEncoded4DDataset):
+        for batch_inds in sampler:
+            vacuum_batch = vacuum_probe_dataset[batch_inds]
+            print(vacuum_batch)
+            print(vacuum_batch.indices.dtype)
+            print(type(vacuum_batch.indices))
+            max_batch = th.max(th.sum(vacuum_batch.counts, dim=1))
+            if max_batch > max_intensity:
+                max_intensity = max_batch.item()
+            w = th.zeros(tuple(vacuum_batch.frame_dimensions), dtype=th.float32)
+            take = vacuum_batch.indices != th.iinfo(vacuum_batch.indices.dtype).max
+            w.view(-1).scatter_add_(0,
+                                    th.tensor(vacuum_batch.indices[take]).long(),
+                                    th.tensor(vacuum_batch.counts[take], dtype=th.float32))
+            vacuum_probe_intensities += w
+
+    vacuum_probe0 = vacuum_probe_intensities / len(vacuum_probe_dataset)
+    vacuum_probe = vacuum_probe0 * (vacuum_probe0 > vacuum_probe0.max() * 15e-2)
+    vacuum_probe = vacuum_probe * (max_intensity / vacuum_probe.sum())
+    vacuum_probe = vacuum_probe.cpu().numpy()
+
+    if options.algorithm_options.verbose:
+        fig, ax = plt.subplots()
+        ax.imshow(fftshift(vacuum_probe))
+        plt.title(f'Vacuum probe intensity: {max_intensity:2.2g} (should be centered)')
+        plt.show()
+
+    radius = options.radius
+    n_angular_samples = options.n_angular_samples
+    n_radial_samples = options.n_radial_samples
+
+    take_beams = vacuum_probe > vacuum_probe.max() * 0.3
+    dx = 1 / 2 / metadata.k_max
+    print('data.frame_dimensions',data.frame_dimensions)
+    print('dx',dx)
+
+    MY, MX = data.frame_dimensions
+    NY = int((np.ceil((r.max(axis=0)[0] + MY + options.algorithm_options.margin) / MY) * MY).item())
+    NX = int((np.ceil((r.max(axis=0)[1] + MX + options.algorithm_options.margin) / MX) * MX).item())
+    N = th.as_tensor([NY, NX])
+    M = th.as_tensor([MY, MX])
+
+    s_meta = SMeta(take_beams, take_beams, radius, dx, N.numpy(), M.numpy(), options.compute_device[0])
+    s_meta = s_meta.make_beamlet_meta(n_radial_samples, n_angular_samples)
+
+    if options.algorithm_options.verbose:
+        fig, ax = plt.subplots(2, s_meta.natural_neighbor_weights.shape[1] // 2 + 1, figsize=(35, 10))
+        axs = ax.ravel()
+        for j in range(s_meta.natural_neighbor_weights.shape[1]):
+            imax = axs[j].imshow(fftshift(s_meta.beamlets[j].cpu().numpy()))
+            axs[j].set_xticks([])
+            axs[j].set_yticks([])
+        axs[-1].imshow(fftshift(vacuum_probe))
+        plt.show()
+
+    qnp = fourier_coordinates_2D(data.frame_dimensions, dx, centered=False)
+    q = th.as_tensor(qnp)
+
+    Psi_gen = ZernikeProbeSingle(q, metadata.wavelength, fft_shifted=True)
+    Ap0 = th.as_tensor(vacuum_probe).float()
+    C1 = th.as_tensor(metadata.aberrations)
+
+    Psi_model = Psi_gen(C1, Ap0).to(options.compute_device[0]).detach()
+    Psi_init = s_meta.beamlets * Psi_model[None, ...]
+    Psi_init = Psi_init * (np.sqrt(vacuum_probe.sum())/th.norm(th.sum(Psi_init,0)))
+
+    psi0 = th.fft.ifft2(Psi_init, norm='ortho')
+
+    if options.algorithm_options.verbose:
+        print(f"Psi_init norm: {th.norm(th.sum(Psi_init,0))**2}")
+        print(f"psi_init norm: {th.norm(th.sum(psi0,0))**2}")
+
+        fig, ax = plt.subplots(2, s_meta.Bp // 2 + 1, figsize=(35, 10))
+        axs = ax.ravel()
+        for j in range(s_meta.Bp):
+            imax = axs[j].imshow(imsave(psi0[j].cpu().numpy()))
+            axs[j].set_xticks([])
+            axs[j].set_yticks([])
+        axs[-1].imshow(fftshift(vacuum_probe))
+        plt.show()
+
+    if options.algorithm_options.verbose:
+        print(f"B           : {s_meta.B}")
+        print(f"Bp          : {s_meta.Bp}")
+        print(f"K           : {len(data)}")
+        print(f"NY, NX      : {NY},{NX}")
+        print(f"MY, MX      : {MY},{MX}")
+
+    if options.algorithm == 'admm':
+        res = admm(data, r, psi0, s_meta, options.n_iter, options.n_batches, options.algorithm_options)
+    else:
+        res = admm(data, r, psi0, s_meta, options.n_iter, options.n_batches, options.algorithm_options)
+
+    return res

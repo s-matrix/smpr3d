@@ -6,20 +6,19 @@
 development. Expect monstrous bugs and razor-sharp edges! A beta release is planned for M&M 2021.**
 
 ![CI](https://github.com/s-matrix/smpr3d/workflows/CI/badge.svg)
+## Documentation
+
+Documentation can be found [here](https://s-matrix.github.io/smpr3d/).
 
 ## Installing
 
+TODO: You can't use smpr3d without any installation by using [Google Colab](https://colab.research.google.com/) yet, but I will be working on it. In fact, every page of this documentation will also be available as an interactive notebook - click "Open in colab" at the top of any page to open it (be sure to change the Colab runtime to "GPU"!).
 
-**TODO** - this project is not on pip or conda yet - install with `python setup.py develop --user`
-
-You can use Smpr3d without any installation by using [Google Colab](https://colab.research.google.com/). In fact, every page of this documentation is also available as an interactive notebook - click "Open in colab" at the top of any page to open it (be sure to change the Colab runtime to "GPU"!).
-
-You can install Smpr3d on your own machines with conda (highly recommended - not working yet :)). If you're using [Anaconda](https://www.anaconda.com/products/individual) then run:
+You can install smpr3d on your own machines with pip. If you're using [Anaconda](https://www.anaconda.com/products/individual) then run:
 ```bash
-conda install -c smpr3d -c pytorch -c anaconda smpr3d 
+pip install smpr3d
 ```
-
-To install with pip, use: `pip install smpr3d`. If you install with pip, you should install PyTorch first by following the PyTorch [installation instructions](https://pytorch.org/get-started/locally/).
+If you install with pip, you should install PyTorch first by following the PyTorch [installation instructions](https://pytorch.org/get-started/locally/).
 
 ## Hackathon - How to use on the nesap cluster 
 
@@ -48,6 +47,8 @@ A fabulous idea
 [Hamish Brown (former NCEM)](https://github.com/HamishGBrown) - theory and first demonstrations
 
 [Colin Ophus (NCEM)](https://github.com/cophus) - theory and first demonstrations
+
+[David Ren (former UC Berkeley)](https://github.com/yhren1993) - initial phase-contrast tomography code
 
 [Alex Rakowski (NCEM)](https://github.com/alex-rakowski) - hpc
 

@@ -3,11 +3,15 @@
 __all__ = ['smatrix_forward_kernel', 'smatrix_backward_kernel_S', 'phase_factor_kernelDBK', 'phase_factor_kernelKB',
            'smatrix_forward_kernel_fast_full4', 'split_kernel', 'split_kernel4', 'split_kernel5', 'split_kernel2',
            'split_kernel3', 'overlap_kernel_real2', 'psi_denom_kernel', 'psi_kernel', 'A_realspace_kernel',
-           'AtF2_kernel', 'dS_kernel']
+           'AtF2_kernel', 'dS_kernel', 'prox_D_gaussian_kernel', 'split_kernel', 'overlap_kernel', 'overlap_kernel2',
+           'overlap_kernel_real', 'overlap_kernel_real2', 'sparse_amplitude_prox_kernel',
+           'sparse_smooth_truncated_amplitude_prox_kernel', 'init_z_kernel', 'psi_denom_kernel', 'psi_kernel',
+           'A_realspace_kernel', 'AtF2_kernel']
 
 # Cell
 import numba.cuda as cuda
 import cmath as cm
+import math as m
 
 @cuda.jit
 def smatrix_forward_kernel(S, phase_factors, rho, r_min, out):
@@ -494,3 +498,370 @@ def dS_kernel(z, z_old, psi, psi_int, psi_int_max, alpha, r, out):
         # - z_old[k, my, mx]
         cuda.atomic.add(out, (bb, y + my, x + mx,0), val.real)
         cuda.atomic.add(out, (bb, y + my, x + mx,1), val.imag)
+
+# Cell
+
+@cuda.jit
+def prox_D_gaussian_kernel(z, z_hat, a, loss, beta):
+    """
+
+    :param z:           K x My x Mx x 2
+    :param z_hat:       K x My x Mx x 2
+    :param a:           K x My x Mx
+    :param beta:        1
+    :param a_strides:   (4,)
+    :return:
+    """
+    n = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
+    K, MY, MX = z.shape
+    N1 = K * MY * MX
+
+    k = (n) // (MY * MX)
+    my = (n - k * (MY * MX)) // MX
+    mx = (n - k * (MY * MX) - my * MX)
+
+    if n < N1:
+        abs_zhat_c = abs(z_hat[k, my, mx])
+        if abs_zhat_c != 0:
+            sgn_zhat = z_hat[k, my, mx] / abs_zhat_c
+            fac = (a[k, my, mx] + beta * abs_zhat_c) / (1.0 + beta)
+            zc = fac * sgn_zhat
+            z[k, my, mx] = zc
+        cuda.atomic.add(loss, (k), abs(abs_zhat_c - a[k, my, mx]) ** 2)
+
+
+# Cell
+@cuda.jit
+def split_kernel(r, t, out):
+    """
+
+    :param r:   K x 2
+    :param t:   B x NY x NX
+    :param out: B x K x MY x MX
+    :return:
+    """
+    n = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
+    B, K, MY, MX = out.shape
+    N = B * K * MY * MX
+
+    b = n // (K * MY * MX)
+    k = (n - b * (K * MY * MX)) // (MY * MX)
+    my = (n - b * (K * MY * MX) - k * (MY * MX)) // MX
+    mx = (n - b * (K * MY * MX) - k * (MY * MX) - my * MX)
+
+    if n < N:
+        y = r[k, 0]
+        x = r[k, 1]
+        out[b, k, my, mx] = t[b, y + my, x + mx]
+
+# Cell
+@cuda.jit
+def overlap_kernel(r, z, out):
+    """
+
+    :param r:   K x 2
+    :param z:   B x K x MY x MX x 2
+    :param out: B x NY x NX x 2
+    :return:
+    """
+    n = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
+    B, K, MY, MX, _ = z.shape
+    N = B * K * MY * MX
+
+    b = n // (K * MY * MX)
+    k = (n - b * (K * MY * MX)) // (MY * MX)
+    my = (n - b * (K * MY * MX) - k * (MY * MX)) // MX
+    mx = (n - b * (K * MY * MX) - k * (MY * MX) - my * MX)
+
+    if n < N:
+        y = r[k, 0]
+        x = r[k, 1]
+        cuda.atomic.add(out, (b, y + my, x + mx, 0), z[b, k, my, mx, 0])
+        cuda.atomic.add(out, (b, y + my, x + mx, 1), z[b, k, my, mx, 1])
+
+# Cell
+@cuda.jit
+def overlap_kernel2(r, z, out):
+    """
+
+    :param r:   K x 2
+    :param z:   B x K x MY x MX x 2
+    :param out: B x NY x NX x 2
+    :return:
+    """
+    n = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
+    B, K, MY, MX = z.shape
+    N = B * K * MY * MX
+
+    b = n // (K * MY * MX)
+    k = (n - b * (K * MY * MX)) // (MY * MX)
+    my = (n - b * (K * MY * MX) - k * (MY * MX)) // MX
+    mx = (n - b * (K * MY * MX) - k * (MY * MX) - my * MX)
+
+    if n < N:
+        y = r[k, 0]
+        x = r[k, 1]
+        cuda.atomic.add(out.real, (b, y + my, x + mx), z[b, k, my, mx].real)
+        cuda.atomic.add(out.imag, (b, y + my, x + mx), z[b, k, my, mx].imag)
+
+# Cell
+@cuda.jit
+def overlap_kernel_real(r, z, out):
+    """
+
+    :param r:   K x 2
+    :param z:   B x K x MY x MX
+    :param out: B x NY x NX
+    :return:
+    """
+    n = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
+    B, K, MY, MX = z.shape
+    N = B * K * MY * MX
+
+    b = n // (K * MY * MX)
+    k = (n - b * (K * MY * MX)) // (MY * MX)
+    my = (n - b * (K * MY * MX) - k * (MY * MX)) // MX
+    mx = (n - b * (K * MY * MX) - k * (MY * MX) - my * MX)
+
+    if n < N:
+        y = r[k, 0]
+        x = r[k, 1]
+        cuda.atomic.add(out, (b, y + my, x + mx), z[b, k, my, mx])
+
+# Cell
+@cuda.jit
+def overlap_kernel_real2(r, z, out):
+    n = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
+    K = r.shape[0]
+    MY, MX = z.shape
+    N = K * MY * MX
+
+    k = n // (MY * MX)
+    my = (n - k * MY * MX) // MX
+    mx = (n - k * MY * MX - my * MX)
+
+    if n < N:
+        y = r[k, 0]
+        x = r[k, 1]
+        val = z[my, mx]
+        cuda.atomic.add(out, (y + my, x + mx), val)
+
+# Cell
+@cuda.jit
+def sparse_amplitude_prox_kernel(z, z_hat, indices_target, counts_target, loss, no_count_indicator, beta):
+    n = cuda.grid(1)
+    K, MY, MX = z.shape
+    N = K * MY * MX
+
+    k = n // (MY * MX)
+    my = (n - k * (MY * MX)) // MX
+    mx = (n - k * (MY * MX) - my * MX)
+
+    if n < N:
+        idx1d = mx + my * MX
+        a_measure = 0
+        for i in range(indices_target.shape[1]):
+            if indices_target[k, i] == idx1d and no_count_indicator != indices_target[k, i]:
+                a_measure = m.sqrt(float(counts_target[k, i]))
+
+        a_model = abs(z_hat[k, my, mx])
+
+        if a_model != 0:
+            sgn_zhat = z_hat[k, my, mx] / a_model
+            fac = (a_measure + beta * a_model) / (1.0 + beta)
+            zc = fac * sgn_zhat
+            z[k, my, mx] = zc
+
+        cuda.atomic.add(loss, (k), abs(a_model - a_measure) ** 2)
+
+# Cell
+@cuda.jit
+def sparse_smooth_truncated_amplitude_prox_kernel(z_model, indices_target, counts_target, loss, out, no_count_indicator,
+                                                  eps, lam):
+    n = cuda.grid(1)
+    K, MY, MX = z_model.shape
+    N = K * MY * MX
+
+    k = n // (MY * MX)
+    my = (n - k * (MY * MX)) // MX
+    mx = (n - k * (MY * MX) - my * MX)
+
+    if n < N:
+        idx1d = mx + my * MX
+        a_measure = 0
+        a_model = abs(z_model[k, my, mx])
+        for i in range(indices_target.shape[1]):
+            if indices_target[k, i] == idx1d and no_count_indicator != indices_target[k, i]:
+                a_measure = m.sqrt(counts_target[k, i])
+
+        out[k, my, mx] = a_measure / a_model
+        loss_k = .5 * abs(a_model - a_measure) ** 2
+
+        loss[k] = loss_k
+
+# Cell
+@cuda.jit
+def init_z_kernel(I_cts, I_inds, Psi_init, no_count_indicator, out):
+    """
+
+    :param I_cts:    K x cts       , integer
+    :param I_inds:   K x cts       , long
+    :param Psi_init: MY x MX   , complex64
+    :param out:      K x MY x MX   , complex64
+    :return:
+    """
+    n = cuda.grid(1)
+    K, MY, MX = I_cts.shape
+    N = K * MY * MX
+
+    k = n // (MY * MX)
+    my = (n - k * (MY * MX)) // MX
+    mx = (n - k * (MY * MX) - my * MX)
+
+    if n < N:
+        idx1d = mx + my * MX
+        a_measure = 0
+        for i in range(I_inds.shape[1]):
+            if I_inds[k, i] == idx1d and no_count_indicator != I_inds[k, i]:
+                a_measure = m.sqrt(I_cts[k, i])
+
+        out[k, my, mx] = a_measure * m.exp(1j * cm.phase(Psi_init[my, mx]))
+
+# Cell
+@cuda.jit
+def psi_denom_kernel(r, t, out):
+    """
+
+    :param r:   K x 2
+    :param t:   B x NY x NX
+    :param out: B x MY x MX
+    :return:
+    """
+    n = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
+    K = r.shape[0]
+    B, MY, MX = out.shape
+    N = B * K * MY * MX
+
+    b = n // (K * MY * MX)
+    k = (n - b * (K * MY * MX)) // (MY * MX)
+    my = (n - b * (K * MY * MX) - k * (MY * MX)) // MX
+    mx = (n - b * (K * MY * MX) - k * (MY * MX) - my * MX)
+
+    if n < N:
+        y = r[k, 0]
+        x = r[k, 1]
+        val = abs(t[b, y + my, x + mx]) ** 2
+        cuda.atomic.add(out, (b, my, mx), val)
+
+# Cell
+@cuda.jit
+def psi_kernel(r, t, z, out):
+    """
+
+    :param r:   K x 2
+    :param t:   BB x NY x NX
+    :param z:   K x MY x MX
+    :param out: BB x MY x MX
+    :return:
+    """
+    n = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
+    K = r.shape[0]
+    B, MY, MX, _ = out.shape
+    N = B * K * MY * MX
+
+    b = n // (K * MY * MX)
+    k = (n - b * (K * MY * MX)) // (MY * MX)
+    my = (n - b * (K * MY * MX) - k * (MY * MX)) // MX
+    mx = (n - b * (K * MY * MX) - k * (MY * MX) - my * MX)
+
+    if n < N:
+        y = r[k, 0]
+        x = r[k, 1]
+        val = t[b, y + my, x + mx].conjugate() * z[k, my, mx]
+        cuda.atomic.add(out, (b, my, mx, 0), val.real)
+        cuda.atomic.add(out, (b, my, mx, 1), val.imag)
+
+# Cell
+@cuda.jit
+def A_realspace_kernel(r, t, psi, out):
+    """
+
+    :param r:   K x 2
+    :param t:   B x NY x NX
+    :param psi: B x K x MY x MX
+    :param out: K x MY x MX
+    :return:
+    """
+    n = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
+    B, K, MY, MX, _ = psi.shape
+    N = K * MY * MX
+
+    k = n // (MY * MX)
+    my = (n - k * (MY * MX)) // MX
+    mx = (n - k * (MY * MX) - my * MX)
+
+    if n < N:
+        for bb in range(B):
+            y = r[k, 0]
+            x = r[k, 1]
+
+            # val = t[bb, y + my, x + mx] * psi[bb, k, my, mx]
+            # cuda.atomic.add(out.real, (k, y + my, x + mx), val.real)
+            # cuda.atomic.add(out.imag, (k, y + my, x + mx), val.imag)
+            #
+            a = t[bb, y + my, x + mx, 0]
+            b = t[bb, y + my, x + mx, 1]
+            u = psi[bb, k, my, mx, 0]
+            v = psi[bb, k, my, mx, 1]
+
+            val_real = a * u - b * v
+            val_imag = b * u + a * v
+
+            cuda.atomic.add(out, (k, my, mx, 0), val_real)
+            cuda.atomic.add(out, (k, my, mx, 1), val_imag)
+
+# Cell
+@cuda.jit
+def AtF2_kernel(z, psi, r, out):
+    n = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
+    K, MY, MX = z.shape
+    N = K * MY * MX
+
+    k = (n // (MY * MX))
+    my = ((n - k * (MY * MX)) // MX)
+    mx = ((n - k * (MY * MX) - my * MX))
+
+    if n < N:
+        y = r[k, 0]
+        x = r[k, 1]
+        val = psi[my, mx].conjugate() * z[k, my, mx]
+        cuda.atomic.add(out.real, (y + my, x + mx), val.real)
+        cuda.atomic.add(out.imag, (y + my, x + mx), val.imag)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

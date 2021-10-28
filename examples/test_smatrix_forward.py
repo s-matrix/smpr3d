@@ -10,7 +10,7 @@ import torch as th
 from timeit import default_timer as time
 
 D = 1
-K = 144
+K = 64
 MY = MX = 32
 f = np.array([2, 2])
 N_coherent_simulation = np.array([MY, MX]) * f
@@ -140,30 +140,30 @@ for i in range(1):
     th.cuda.synchronize(dev)
     end4 = time()
 
-th.backends.cuda.matmul.allow_tf32 = False
-exitw3 = A_fast_full5(S, phase_factors2, r[0], r_min, MY, MX)
-for i in range(1):
-    start7 = time()
-    exitw3 = A_fast_full3(S, phase_factors2, r[0], r_min, MY, MX)
-    th.cuda.synchronize(dev)
-    end7 = time()
-
-th.backends.cuda.matmul.allow_tf32 = True
-exitw4 = A_fast_full5(S, phase_factors2, r[0], r_min, MY, MX)
-for i in range(1):
-    start8 = time()
-    exitw4 = A_fast_full5(S, phase_factors2, r[0], r_min, MY, MX)
-    th.cuda.synchronize(dev)
-    end8 = time()
+# th.backends.cuda.matmul.allow_tf32 = False
+# exitw3 = A_fast_full5(S, phase_factors2, r[0], r_min, MY, MX)
+# for i in range(1):
+#     start7 = time()
+#     exitw3 = A_fast_full5(S, phase_factors2, r[0], r_min, MY, MX)
+#     th.cuda.synchronize(dev)
+#     end7 = time()
+#
+# th.backends.cuda.matmul.allow_tf32 = True
+# exitw4 = A_fast_full5(S, phase_factors2, r[0], r_min, MY, MX)
+# for i in range(1):
+#     start8 = time()
+#     exitw4 = A_fast_full5(S, phase_factors2, r[0], r_min, MY, MX)
+#     th.cuda.synchronize(dev)
+#     end8 = time()
 
 print(f'A_fast_full (custom kernel)                            {end1 - start1}')
-print(f'A_fast_full4 (custom kernel 2)                         {end4 - start4}')
+# print(f'A_fast_full4 (custom kernel 2)                         {end4 - start4}')
 print(f'A_fast_full2 (real batched matmul)   NO Tensorfloat32  {end2 - start2}')
 print(f'A_fast_full2 (complex batched matmul    Tensorfloat32) {end6 - start6}')
 print(f'A_fast_full3 (complex batched matmul NO Tensorfloat32) {end3 - start3}')
 print(f'A_fast_full3 (complex batched matmul    Tensorfloat32) {end5 - start5}')
-print(f'A_fast_full5 (complex batched matmul NO Tensorfloat32) {end7 - start7}')
-print(f'A_fast_full5 (complex batched matmul    Tensorfloat32) {end8 - start8}')
+# print(f'A_fast_full5 (complex batched matmul NO Tensorfloat32) {end7 - start7}')
+# print(f'A_fast_full5 (complex batched matmul    Tensorfloat32) {end8 - start8}')
 cb = fftshift_checkerboard(MX // 2, MY // 2)
 
 # K = 128
@@ -180,7 +180,7 @@ cb = fftshift_checkerboard(MX // 2, MY // 2)
 # A_fast_full5 (complex batched matmul    Tensorfloat32) 0.07899916195310652
 # %%
 i = 0
-rexitw = th.fft.ifft2(exitw[:, i], norm='ortho')
+rexitw = th.fft.ifft2(exitw4[:, i], norm='ortho')
 # rexitw2 = th.ifft(exitw2, 2, True)
 #%%
 
@@ -191,7 +191,7 @@ rexitw = th.fft.ifft2(exitw[:, i], norm='ortho')
 # plotAbsAngle(exitw[0,0].cpu()-exitw2[0].cpu())
 # #%%
 plotAbsAngle(exitw[0,0].cpu()-exitw3[0].cpu(),'NO tensorfloat')
-plotAbsAngle(exitw[0,0].cpu()-exitw4[0].cpu(),'   tensorfloat')
+# plotAbsAngle(exitw[0,0].cpu()-exitw4[0].cpu(),'   tensorfloat')
 #%%
 from smatrix2.util import plotcx
-plotcx(exitw3[0].cpu().numpy())
+plotcx(exitw4[0,0].cpu().numpy())
