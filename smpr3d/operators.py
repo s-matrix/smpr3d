@@ -982,7 +982,7 @@ def A_fast_full4(S, phase_factors, r, r_min, out=None, Mx=0, My=0):
     #                 (2^32-1 , 65535, 65535)
 
     threadsperblock = (tbp, tbp, tbp)
-    blockspergrid = tuple(np.ceil((K/tbp, MY/tbp, MX/tbp)).astype(np.int))# m.ceil(np.prod(np.array((B, MX, MY))) / threadsperblock)
+    blockspergrid = tuple(np.ceil((K/tbp, MY/tbp, MX/tbp)).astype(np.int32))# m.ceil(np.prod(np.array((B, MX, MY))) / threadsperblock)
     smatrix_forward_kernel_fast_full4[blockspergrid, threadsperblock, stream](th.view_as_real(S), phase_factors, r, r_min, out)
     return th.view_as_complex(out)
 
@@ -1180,7 +1180,7 @@ def sparse_amplitude_prox(z, z_hat, indices_target, counts_target, beta):
     """
 
     threadsperblock = (256,)
-    blockspergrid = tuple(np.ceil(np.array(np.prod(z.shape)) / threadsperblock).astype(np.int))
+    blockspergrid = tuple(np.ceil(np.array(np.prod(z.shape)) / threadsperblock).astype(np.int32))
 
     loss = th.zeros((z.shape[0],), device=z.device, dtype=th.float32)
     no_count_indicator = th.iinfo(indices_target.dtype).max
@@ -1218,7 +1218,7 @@ def sparse_smooth_truncated_amplitude_prox(z_model, z_hat, indices_target, count
     """
 
     threadsperblock = (256,)
-    blockspergrid = tuple(np.ceil(np.array(np.prod(z_model.shape)) / threadsperblock).astype(np.int))
+    blockspergrid = tuple(np.ceil(np.array(np.prod(z_model.shape)) / threadsperblock).astype(np.int32))
 
     loss = th.zeros((z_model.shape[0],), device=z_model.device, dtype=th.float32)
     grad = th.ones_like(z_model)

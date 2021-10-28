@@ -3177,16 +3177,16 @@ def beamlet_samples(A, radius, n_angular_samples, n_radial_samples):
     """
     M = A.shape[0]
 
-    my1 = np.tile(fftfreq(M, d=1 / M)[:, None], M).astype(np.int)
-    mx1 = np.repeat(fftfreq(M, d=1 / M)[:, None].T, M, axis=0).astype(np.int)
+    my1 = np.tile(fftfreq(M, d=1 / M)[:, None], M).astype(np.int32)
+    mx1 = np.repeat(fftfreq(M, d=1 / M)[:, None].T, M, axis=0).astype(np.int32)
 
     B = np.nonzero(A)
     beam_coords1 = np.array([my1[B], mx1[B]]).T
     beam_coords2 = beam_coords1 + 1e-2
 
     a_offset = np.pi / n_angular_samples
-    my1 = np.tile(fftfreq(M, d=1 / M)[:, None], M).astype(np.int)
-    mx1 = np.repeat(fftfreq(M, d=1 / M)[:, None].T, M, axis=0).astype(np.int)
+    my1 = np.tile(fftfreq(M, d=1 / M)[:, None], M).astype(np.int32)
+    mx1 = np.repeat(fftfreq(M, d=1 / M)[:, None].T, M, axis=0).astype(np.int32)
     beam_coords1 = np.array([my1[B], mx1[B]]).T
     radial_samples = np.linspace(0, radius, n_radial_samples, endpoint=True)[1:]
     samples = [[0, 0]]
@@ -3309,7 +3309,7 @@ def gradz_poisson_sparse(out, z, a_indices, a_counts):
     gpu = cuda.get_current_device()
     stream = th.cuda.current_stream().cuda_stream
     threadsperblock = (2, 32)
-    blockspergrid = tuple(np.ceil(np.array(z.shape[:2]) / threadsperblock).astype(np.int))
+    blockspergrid = tuple(np.ceil(np.array(z.shape[:2]) / threadsperblock).astype(np.int32))
     no_count_indicator = th.iinfo(a_indices.dtype).max
     total_cts = th.sum(a_counts,2)
     gradz_poisson_sparse_kernel[blockspergrid, threadsperblock, stream](out, z, a_indices, a_counts, no_count_indicator,
@@ -3365,7 +3365,7 @@ def gradz_gaussian_sparse(out, z, a_indices, a_counts):
     gpu = cuda.get_current_device()
     stream = th.cuda.current_stream().cuda_stream
     threadsperblock = (2, 32)
-    blockspergrid = tuple(np.ceil(np.array(z.shape[:2]) / threadsperblock).astype(np.int))
+    blockspergrid = tuple(np.ceil(np.array(z.shape[:2]) / threadsperblock).astype(np.int32))
     no_count_indicator = th.iinfo(a_indices.dtype).max
     gradz_gaussian_sparse_kernel[blockspergrid, threadsperblock, stream](out, z, a_indices, a_counts, no_count_indicator)
     return z
@@ -3402,7 +3402,7 @@ def sparse_amplitude_loss(a_model, indices_target, counts_target, frame_dimensio
     :return: loss (1,), grad (K x M1 x M2)
     """
     threadsperblock = (256,)
-    blockspergrid = tuple(np.ceil(np.array(indices_target.shape[0]) / threadsperblock).astype(np.int))
+    blockspergrid = tuple(np.ceil(np.array(indices_target.shape[0]) / threadsperblock).astype(np.int32))
 
     loss = th.zeros((1,), device=a_model.device, dtype=th.float32)
     grad = th.ones_like(a_model)
@@ -3454,7 +3454,7 @@ def sparse_smooth_truncated_amplitude_loss(a_model, indices_target, counts_targe
     """
 
     threadsperblock = (256,)
-    blockspergrid = tuple(np.ceil(np.array(np.prod(a_model.shape)) / threadsperblock).astype(np.int))
+    blockspergrid = tuple(np.ceil(np.array(np.prod(a_model.shape)) / threadsperblock).astype(np.int32))
 
     loss = th.zeros((a_model.shape[0],), device=a_model.device, dtype=th.float32)
     grad = th.ones_like(a_model)
@@ -3508,7 +3508,7 @@ def sparse_smooth_truncated_amplitude_prox(a_model, indices_target, counts_targe
     """
 
     threadsperblock = (256,)
-    blockspergrid = tuple(np.ceil(np.array(np.prod(a_model.shape)) / threadsperblock).astype(np.int))
+    blockspergrid = tuple(np.ceil(np.array(np.prod(a_model.shape)) / threadsperblock).astype(np.int32))
 
     loss = th.zeros((a_model.shape[0],), device=a_model.device, dtype=th.float32)
     grad = th.ones_like(a_model)
@@ -3555,7 +3555,7 @@ def sparse_amplitude_prox(a_model, indices_target, counts_target, frame_dimensio
     """
 
     threadsperblock = (256,)
-    blockspergrid = tuple(np.ceil(np.array(np.prod(a_model.shape)) / threadsperblock).astype(np.int))
+    blockspergrid = tuple(np.ceil(np.array(np.prod(a_model.shape)) / threadsperblock).astype(np.int32))
 
     loss = th.zeros((a_model.shape[0],), device=a_model.device, dtype=th.float32)
     grad = th.ones_like(a_model)
