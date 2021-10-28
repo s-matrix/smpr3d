@@ -5,8 +5,8 @@ from __future__ import annotations
 
 
 __all__ = ['fasta2', 'TorchTomographySolver', 'AETDataset', 'PhaseContrastScattering', 'bin_obj', 'complex_abs',
-           'propagate_parallax_shift_Smatrix_kernel', 'propagate_parallax_shift_Smatrix', 'depth_section',
-           'ADMMOptions', 'SMPRSolution', 'gaussian', 'admm']
+           'propagate_parallax_shift_Smatrix_kernel', 'propagate_parallax_shift_Smatrix_kernel',
+           'propagate_parallax_shift_Smatrix', 'depth_section', 'ADMMOptions', 'SMPRSolution', 'gaussian', 'admm']
 
 # Cell
 
@@ -719,7 +719,26 @@ def propagate_parallax_shift_Smatrix_kernel(S, lam, q, q2, beam_coords, t, out):
         # out[b, ny, nx, 0] = v.real
         # out[b, ny, nx, 1] = v.imag
         out[b, ny, nx] = v
+@cuda.jit
+def propagate_parallax_shift_Smatrix_kernel(S, lam, q, q2, beam_coords, t, out):
+    n = cuda.blockIdx.x * cuda.blockDim.x + cuda.threadIdx.x
+    B, NY, NX = S.shape
+    N = B * NY * NX
 
+    b = n // (NY * NX)
+    ny = (n - b * (NY * NX)) // NX
+    nx = (n - b * (NY * NX) - ny * NX)
+
+    if n < N:
+        dy = cm.tan(q[0, beam_coords[b, 0], beam_coords[b, 1]] * lam[0])
+        dx = cm.tan(q[1, beam_coords[b, 0], beam_coords[b, 1]] * lam[0])
+        phase = cm.pi * lam[0] * q2[ny, nx] + 2 * cm.pi * (q[0, ny, nx] * dy + q[1, ny, nx] * dx)
+        val = cm.exp(1j * t[0] * phase)
+        Sc = S[b, ny, nx]
+        v = Sc * val
+        # out[b, ny, nx, 0] = v.real
+        # out[b, ny, nx, 1] = v.imag
+        out[b, ny, nx] = v
 
 def propagate_parallax_shift_Smatrix(S, lam, q, q2, beam_coords, t, out=None):
     if out is None:
