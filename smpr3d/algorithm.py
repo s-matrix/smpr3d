@@ -1085,7 +1085,8 @@ def admm(measurements : Union[LinearIndexEncoded4DDataset, Dense4DDataset],
         plotAbsAngle(S_model[slic].cpu(), 'S_model init')
 
     R_factors = []
-    for i in trange(n_iter, desc = 'ADMM iterations'):
+    # for i in trange(n_iter, desc = 'ADMM iterations'):
+    for i in range(n_iter):
         start = timer()
         for batch_inds in sampler:
             zz = z[batch_inds].to(dev_compute[0], non_blocking=non_blocking)
