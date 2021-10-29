@@ -98,8 +98,8 @@ def reconstruct_smatrix(data : Union[LinearIndexEncoded4DDataset, Dense4DDataset
             w = th.zeros(tuple(vacuum_batch.frame_dimensions), dtype=th.float32)
             take = vacuum_batch.indices != th.iinfo(vacuum_batch.indices.dtype).max
             w.view(-1).scatter_add_(0,
-                                    th.tensor(vacuum_batch.indices[take]).long(),
-                                    th.tensor(vacuum_batch.counts[take], dtype=th.float32))
+                                    vacuum_batch.indices[take].clone().detach().long(),
+                                    vacuum_batch.counts[take].clone().detach().float())
             vacuum_probe_intensities += w
 
     vacuum_probe0 = vacuum_probe_intensities / len(vacuum_probe_dataset)

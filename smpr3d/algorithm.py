@@ -865,6 +865,7 @@ from typing import TYPE_CHECKING, List, NamedTuple, Optional, Union, Callable
 from dataclasses import dataclass
 from .data import LinearIndexEncoded4DDataset, Dense4DDataset, SMeta
 from torch.utils.data import BatchSampler, SequentialSampler
+import logging
 
 @dataclass
 class ADMMOptions:
@@ -987,6 +988,7 @@ def gaussian(x, kernel_size, sigma):
         ret = smr + 1j * smi
         return th.clone(ret[0])
 
+from timeit import default_timer as timer
 def admm(measurements : Union[LinearIndexEncoded4DDataset, Dense4DDataset],
          r : th.tensor,
          psi0 : th.tensor,
@@ -1084,6 +1086,7 @@ def admm(measurements : Union[LinearIndexEncoded4DDataset, Dense4DDataset],
 
     R_factors = []
     for i in trange(n_iter, desc = 'ADMM iterations'):
+        start = timer()
         for batch_inds in sampler:
             zz = z[batch_inds].to(dev_compute[0], non_blocking=non_blocking)
             LL = Lambda[batch_inds].to(dev_compute[0], non_blocking=non_blocking)
@@ -1213,8 +1216,9 @@ def admm(measurements : Union[LinearIndexEncoded4DDataset, Dense4DDataset],
         losses = np.concatenate(losses)
         R_factor = np.sqrt(np.sum(losses)) / a_norm
         R_factors.append(R_factor)
+        end = timer()
         if options.verbose:
-            print(f"{i} R-factor: {R_factor:3.3g}")
+            logging.info(f"{i:03d}/{n_iter:03d} [{(end - start):-02.2f}s] R-factor: {R_factor:3.3g}")
 
         if do_position_correction(i):
             for batch_inds in sampler:
