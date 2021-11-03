@@ -959,12 +959,12 @@ class SMPRSolution:
     def from_h5(file_path, key):
         with h5py.File(file_path, 'r') as f:
             g = f[key]
-            converged = g['converged'][()]
-            smatrix = g['smatrix'][...]
-            probe = g['probe'][...]
-            positions = g['positions'][...]
-            r_factor = g['r_factor'][()]
-            r_factor_history = g['r_factor_history'][...]
+            converged = bool(g['converged'][()])
+            smatrix = th.as_tensor(g['smatrix'][...])
+            probe = th.as_tensor(g['probe'][...])
+            positions = th.as_tensor(g['positions'][...])
+            r_factor = float(g['r_factor'][()])
+            r_factor_history = th.as_tensor(g['r_factor_history'][...])
 
         s_meta = SMeta.from_h5(file_path, key + 's_meta')
 
@@ -1124,7 +1124,7 @@ def admm(measurements : Union[LinearIndexEncoded4DDataset, Dense4DDataset],
                 r[batch_inds, 1] = th.clamp(r[batch_inds, 1], 0, NX - MX)
 
                 dL_dr_old[batch_inds] = dL_dr_up
-
+        del S_split
         new_psi = th.zeros_like(psi0)
         new_psi_denom = th.zeros(psi0.shape, device=dev_compute[0])
 
@@ -1133,7 +1133,6 @@ def admm(measurements : Union[LinearIndexEncoded4DDataset, Dense4DDataset],
             S_split = th.zeros((Bp, K_b, MY, MX), dtype=cx_dtype, device=dev_compute[0])
             if do_subpix:
                 z_hatb = z_hat[batch_inds].to(dev_compute[0], non_blocking=non_blocking)
-                S_split[:] = 0
                 S_split = Qsplit(r_int[batch_inds], S_model, S_split)
 
                 psi0 = th.conj(S_split) * z_hatb

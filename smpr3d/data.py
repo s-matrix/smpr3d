@@ -160,17 +160,23 @@ class SMeta:
         return res
 
     def make_beamlet_meta(self, n_radial_samples, n_angular_samples = 6) -> SMeta:
-        beamlet_coords = beamlet_samples(self.all_beams.cpu().numpy(),
+        parent_beams_coords = beamlet_samples(self.all_beams.cpu().numpy(),
                             self.numerical_aperture_radius_pixels,
                             n_angular_samples,
                             n_radial_samples)
 
-        parent_beams = np.zeros(self.M, dtype=np.bool)
-        for si in beamlet_coords:
+        parent_beams = th.zeros(tuple(self.M), dtype=th.bool)
+        for si in parent_beams_coords:
             parent_beams[si[0],si[1]] = 1
 
+        Bp = parent_beams_coords.shape[0]
+        mgrid = np.array(np.mgrid[-self.M[0] // 2:self.M[0] // 2, -self.M[1] // 2:self.M[1] // 2])
+        q_coords = th.from_numpy(fftshift(mgrid, (1, 2)))
+        parent_beams_expanded = parent_beams[None,...].expand_as(q_coords)
+        parent_beams_coords = q_coords[parent_beams_expanded].reshape(2,Bp).T
+
         if n_radial_samples > 1:
-            nnw = natural_neighbor_weights(beamlet_coords,
+            nnw = natural_neighbor_weights(parent_beams_coords,
                                           self.all_beams_coords.cpu().numpy(),
                                           minimum_weight_cutoff=1e-2)
         else:
