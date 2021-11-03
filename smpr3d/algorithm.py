@@ -1124,7 +1124,7 @@ def admm(measurements : Union[LinearIndexEncoded4DDataset, Dense4DDataset],
                 r[batch_inds, 1] = th.clamp(r[batch_inds, 1], 0, NX - MX)
 
                 dL_dr_old[batch_inds] = dL_dr_up
-        del S_split
+            del S_split
         new_psi = th.zeros_like(psi0)
         new_psi_denom = th.zeros(psi0.shape, device=dev_compute[0])
 
