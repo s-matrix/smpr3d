@@ -280,7 +280,10 @@ class Metadata4D(Metadata):
             res.E_ev = g['E_ev'][()]
             res.wavelength = g['wavelength'][()]
             res.aberrations = g['aberrations'][...]
-            res.sample_thickness_guess_angstrom = g['sample_thickness_guess_angstrom'][()]
+            try:
+                res.sample_thickness_guess_angstrom = g['sample_thickness_guess_angstrom'][()]
+            except:
+                pass
         return res
 
 # Cell
