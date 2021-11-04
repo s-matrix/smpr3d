@@ -4,8 +4,8 @@
 from __future__ import annotations
 
 
-__all__ = ['SMeta', 'Metadata', 'Metadata4D', 'Sparse3DData', 'get_CoM', 'get_probe_size', 'Sparse4DData',
-           'Dense4DDataset', 'LinearIndexEncoded4DDataset']
+__all__ = ['DetectorMeta', 'SMeta', 'Metadata', 'Metadata4D', 'Sparse3DData', 'get_CoM', 'get_probe_size',
+           'Sparse4DData', 'Dense4DDataset', 'LinearIndexEncoded4DDataset']
 
 # Cell
 from ncempy.io.dm import fileDM
@@ -29,6 +29,30 @@ from numpy.fft import fftshift
 from dataclasses import dataclass
 
 # Cell
+@dataclass
+class DetectorMeta:
+    bright_field_center : np.array
+    bright_field_radius : float
+
+    def __init__(self, bright_field_center, bright_field_radius):
+        self.bright_field_radius = bright_field_radius
+        self.bright_field_center = bright_field_center
+
+    def to_h5(self, file_path, key = 'detector_meta'):
+            with h5py.File(file_path, 'a') as f:
+                g = f.create_group(key)
+                g.create_dataset('bright_field_radius', data=self.bright_field_radius)
+                g.create_dataset('bright_field_center', data=self.bright_field_center)
+
+    @staticmethod
+    def from_h5(file_path, key = 'detector_meta'):
+        with h5py.File(file_path, 'r') as f:
+            g = f[key]
+            bright_field_center = g['bright_field_center'][...]
+            bright_field_radius = g['bright_field_radius'][()]
+        res = DetectorMeta(bright_field_center,bright_field_radius)
+        return res
+
 @dataclass
 class SMeta:
     f : np.array
@@ -117,36 +141,19 @@ class SMeta:
         #q_b_coords     (B, 2)
         #q_dft          (MY, MX)
 
-    def to_h5(self, file_path, key):
+    def to_h5(self, file_path, key = 's_matrix_meta'):
         with h5py.File(file_path, 'a') as f:
             g = f.create_group(key)
-            # g.create_dataset('f', data=self.f)
             g.create_dataset('M', data=self.M)
             g.create_dataset('N', data=self.N)
-            # g.create_dataset('q', data=self.q.cpu().numpy())
-            # g.create_dataset('qf', data=self.qf.cpu().numpy())
-            # g.create_dataset('q2', data=self.q2.cpu().numpy())
-            # g.create_dataset('qf2', data=self.qf2.cpu().numpy())
-            # g.create_dataset('q_coords', data=self.q_coords.cpu().numpy())
-            # g.create_dataset('r_indices', data=self.r_indices.cpu().numpy())
             g.create_dataset('all_beams', data=self.all_beams.cpu().numpy())
             g.create_dataset('parent_beams', data=self.parent_beams.cpu().numpy())
-            # g.create_dataset('beam_numbers', data=self.beam_numbers.cpu().numpy())
-            # g.create_dataset('all_beams_q', data=self.all_beams_q.cpu().numpy())
-            # g.create_dataset('all_beams_coords', data=self.all_beams_coords.cpu().numpy())
-            # g.create_dataset('parent_beams_q', data=self.parent_beams_q.cpu().numpy())
-            # g.create_dataset('parent_beams_coords', data=self.parent_beams_coords.cpu().numpy())
             g.create_dataset('numerical_aperture_radius_pixels', data=self.numerical_aperture_radius_pixels)
-            # g.create_dataset('natural_neighbor_weights', data=self.natural_neighbor_weights.cpu().numpy())
-            # g.create_dataset('beamlets', data=self.beamlets.cpu().numpy())
-            # g.create_dataset('q_dft', data=self.q_dft.cpu().numpy())
-            # g.create_dataset('B', data=self.B)
-            # g.create_dataset('B', data=self.B)
             g.create_dataset('dx', data=self.dx)
             g.create_dataset('device', data=str(self.device))
 
     @staticmethod
-    def from_h5(file_path, key):
+    def from_h5(file_path, key = 's_matrix_meta'):
         with h5py.File(file_path, 'r') as f:
             g = f[key]
             all_beams = g['all_beams'][...]
@@ -203,6 +210,8 @@ class SMeta:
         new_meta.beamlets = th.as_tensor(beamlets).to(new_meta.device)
         return new_meta
 
+
+
 # Cell
 @dataclass
 class Metadata:
@@ -212,6 +221,7 @@ class Metadata:
     wavelength : float
     rotation_deg : float
     aberrations : np.array
+    sample_thickness_guess_angstrom : float
 
 @dataclass
 class Metadata4D(Metadata):
@@ -227,18 +237,24 @@ class Metadata4D(Metadata):
         self.wavelength = -1
         self.aberrations = np.zeros((12,))
         self.pixel_step = np.array([0,0])
+        self.sample_thickness_guess_angstrom = 0
 
     @staticmethod
     def from_dm4_file(filename):
         m = Metadata4D()
-
         with fileDM(filename) as f:
             m.E_ev = f.allTags['.ImageList.2.ImageTags.Microscope Info.Voltage']
             m.scan_step = np.array(f.scale[-2:]) * 10
         m.wavelength = wavelength(m.E_ev)
         return m
 
-    def to_h5(self, file_path, key):
+    def load_voltage_and_scanstep_from_dm4_(self, filename):
+        with fileDM(filename) as f:
+            self.E_ev = f.allTags['.ImageList.2.ImageTags.Microscope Info.Voltage']
+            self.scan_step = np.array(f.scale[-2:]) * 10
+        self.wavelength = wavelength(self.E_ev)
+
+    def to_h5(self, file_path, key = 'meta'):
         with h5py.File(file_path, 'a') as f:
             g = f.create_group(key)
             g.create_dataset('scan_step', data=self.scan_step)
@@ -249,9 +265,10 @@ class Metadata4D(Metadata):
             g.create_dataset('wavelength', data=self.wavelength)
             g.create_dataset('aberrations', data=self.aberrations)
             g.create_dataset('pixel_step', data=self.pixel_step)
+            g.create_dataset('sample_thickness_guess_angstrom', data=self.sample_thickness_guess_angstrom)
 
     @staticmethod
-    def from_h5(file_path, key):
+    def from_h5(file_path, key = 'meta'):
         res = Metadata4D()
         with h5py.File(file_path, 'r') as f:
             g = f[key]
@@ -263,6 +280,7 @@ class Metadata4D(Metadata):
             res.E_ev = g['E_ev'][()]
             res.wavelength = g['wavelength'][()]
             res.aberrations = g['aberrations'][...]
+            res.sample_thickness_guess_angstrom = g['sample_thickness_guess_angstrom'][()]
         return res
 
 # Cell

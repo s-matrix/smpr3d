@@ -5,23 +5,23 @@ __all__ = ['array_split_divpoints_ntotal', 'fftshift_checkerboard', 'cartesian_a
            'validate_standard_param', 'format_standard_param', 'asParam', 'make_default', 'PARAM_PREFIX',
            'single_sideband_reconstruction', 'single_sideband_kernel', 'sector_mask', 'wavelength', 'DOF',
            'dense_to_sparse_kernel', 'advanced_raster_scan', 'advanced_raster_scan', 'get_qx_qy_1D', 'get_qx_qy_2D',
-           'scatter_add_patches', 'gather_patches', 'array_split_divpoints', 'show3DStack', 'compare3DStack',
-           'compare4DStack', 'HSV_to_RGB', 'mosaic', 'plotmosaic', 'P1A_to_HSV', 'imsave', 'plot_complex_multi', 'plot',
-           'zplot', 'plotAbsAngle', 'center_of_mass_kernel', 'sparse_to_dense_datacube_kernel_crop',
-           'sparse_to_dense_datacube_crop', 'sparse_to_dense_datacube_crop_gain_mask_kernel',
-           'sparse_to_dense_datacube_crop_gain_mask', 'fftshift_kernel', 'fftshift_pad_kernel',
-           'virtual_annular_image_kernel', 'crop_symmetric_around_center_kernel', 'crop_symmetric_around_center',
-           'rotate_kernel', 'rotate', 'sum_kernel', 'sum_frames', 'rebin_kernel', 'disk_overlap_function',
-           'disk_overlap_kernel', 'double_overlap_intensitities_in_range',
-           'find_rotation_angle_with_double_disk_overlap', 'convolve_kernel', 'cartesian_aberrations_single',
-           'cartesian_aberrations', 'aperture', 'ZernikeProbe2', 'ZernikeProbeSingle', 'ZernikeProbe', 'sdebug',
-           'h5write', 'h5append', 'h5read', 'h5info', 'h5options', 'ImageTransformOpticalFlow',
-           'natural_neighbor_weights_internal', 'natural_neighbor_weights', 'beamlet_samples', 'prox_D_gaussian_kernel',
-           'prox_D_gaussian', 'gradz_poisson_sparse_kernel', 'gradz_poisson_sparse', 'gradz_gaussian_sparse_kernel',
-           'gradz_gaussian_sparse', 'sparse_amplitude_loss_kernel', 'sparse_amplitude_loss',
-           'sparse_smooth_truncated_amplitude_loss_kernel', 'sparse_smooth_truncated_amplitude_loss',
-           'sparse_smooth_truncated_amplitude_prox_kernel', 'sparse_smooth_truncated_amplitude_prox',
-           'sparse_amplitude_prox_kernel', 'sparse_amplitude_prox']
+           'scatter_add_patches', 'gather_patches', 'array_split_divpoints', 'plot_tableau', 'show3DStack',
+           'compare3DStack', 'compare4DStack', 'HSV_to_RGB', 'mosaic', 'plotmosaic', 'P1A_to_HSV', 'imsave',
+           'plot_complex_multi', 'plot', 'zplot', 'plotAbsAngle', 'center_of_mass_kernel',
+           'sparse_to_dense_datacube_kernel_crop', 'sparse_to_dense_datacube_crop',
+           'sparse_to_dense_datacube_crop_gain_mask_kernel', 'sparse_to_dense_datacube_crop_gain_mask',
+           'fftshift_kernel', 'fftshift_pad_kernel', 'virtual_annular_image_kernel',
+           'crop_symmetric_around_center_kernel', 'crop_symmetric_around_center', 'rotate_kernel', 'rotate',
+           'sum_kernel', 'sum_frames', 'rebin_kernel', 'disk_overlap_function', 'disk_overlap_kernel',
+           'double_overlap_intensitities_in_range', 'find_rotation_angle_with_double_disk_overlap', 'convolve_kernel',
+           'cartesian_aberrations_single', 'cartesian_aberrations', 'aperture', 'ZernikeProbe2', 'probe_radius',
+           'ZernikeProbeSingle', 'ZernikeProbe', 'sdebug', 'h5write', 'h5append', 'h5read', 'h5info', 'h5options',
+           'ImageTransformOpticalFlow', 'natural_neighbor_weights_internal', 'natural_neighbor_weights',
+           'beamlet_samples', 'prox_D_gaussian_kernel', 'prox_D_gaussian', 'gradz_poisson_sparse_kernel',
+           'gradz_poisson_sparse', 'gradz_gaussian_sparse_kernel', 'gradz_gaussian_sparse',
+           'sparse_amplitude_loss_kernel', 'sparse_amplitude_loss', 'sparse_smooth_truncated_amplitude_loss_kernel',
+           'sparse_smooth_truncated_amplitude_loss', 'sparse_smooth_truncated_amplitude_prox_kernel',
+           'sparse_smooth_truncated_amplitude_prox', 'sparse_amplitude_prox_kernel', 'sparse_amplitude_prox']
 
 # Cell
 from numpy.fft import fftfreq
@@ -1036,7 +1036,7 @@ def array_split_divpoints(ary, indices_or_sections, axis=0):
     return div_points
 
 # Cell
-import matplotlib
+import matplotlib as mpl
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -1046,8 +1046,77 @@ import numpy as np
 from PIL import Image
 from matplotlib.widgets import Slider
 import torch as th
+import matplotlib.cm as cma
+from matplotlib_scalebar.scalebar import ScaleBar
 
+def plot_tableau(S: th.tensor,
+                         s_matrix_meta,
+                         cbar_label: str,
+                         plot_title = '',
+                         nstd=4,
+                         dx_scale_label='nm',
+                         relative_axis_size=0.12,
+                         return_fig=False):
+    dx = s_matrix_meta.dx[0] / 10
 
+    vmean = np.mean(S)
+    vstd = np.std(S)
+
+    vmin = vmean - nstd * vstd
+    vmax = vmean + nstd * vstd
+
+    r = s_matrix_meta.parent_beams_coords.cpu().float().numpy() * np.array([1, -1])
+    r /= r.max()
+    r /= 2.5
+
+    q = s_matrix_meta.parent_beams_q.cpu().numpy() * np.array([1, -1])
+
+    fig = plt.figure(dpi=600)
+    fig.set_size_inches(18.300000 / 2.54, 18.300000 / 2.54, forward=True)
+    ax = fig.subplots(r.shape[0] + 2)
+    axs = ax.ravel()
+
+    rel_size = np.array([relative_axis_size, relative_axis_size])
+
+    for axi, ri, qi, si in zip(axs, r, q, S):
+        axi.imshow(si, interpolation='nearest', cmap=plt.get_cmap('inferno'), vmin=vmin, vmax=vmax)
+        axi.set_xticks([])
+        axi.set_yticks([])
+        axi.spines['top'].set_visible(False)
+        axi.spines['right'].set_visible(False)
+        axi.spines['bottom'].set_visible(False)
+        axi.spines['left'].set_visible(False)
+        psix = 0.5 - rel_size[0] / 2 + ri[0]
+        psiy = 0.5 - rel_size[1] / 2 + ri[1]
+        axi.set_position([psix, psiy, rel_size[0], rel_size[1]])
+        plt.figure(1).text(psix + .005, psiy + rel_size[0] - .015,
+                           f'q = ({qi[1]:2.1f},{qi[0]:2.1f})' + r' $\mathrm{\AA^{-1}}$',
+                           transform=plt.figure(1).transFigure, fontsize=6)  # id=plt.figure(1).texts[0].new
+        # plt.figure(1).texts[0].set_position([psix, psiy])
+
+    im = np.zeros_like(si)
+    im[:] = np.nan
+    scalebar = ScaleBar(dx, dx_scale_label, length_fraction=0.75, height_fraction=0.1, location='lower right')
+    axs[-2].imshow(im, interpolation='nearest', cmap=plt.get_cmap('inferno'), vmin=vmin, vmax=vmax)
+    axs[-2].set_xticks([])
+    axs[-2].set_yticks([])
+    axs[-2].spines['top'].set_visible(False)
+    axs[-2].spines['right'].set_visible(False)
+    axs[-2].spines['bottom'].set_visible(False)
+    axs[-2].spines['left'].set_visible(False)
+    axs[-2].add_artist(scalebar)
+    axs[-2].set_position([0.85, 0.03, rel_size[0], rel_size[1]])
+
+    norm = mpl.colors.Normalize(vmin=vmin, vmax=vmax, clip=False)
+    cbar = fig.colorbar(cma.ScalarMappable(norm=norm, cmap=plt.get_cmap('inferno')), cax=axs[-1])
+    axs[-1].set_position([0.01, 0.03, 0.02, 0.2])
+    plt.figure(1).text(0.01, 0.01, cbar_label, transform=plt.figure(1).transFigure, fontsize=8)
+
+    # % start: automatic generated code from pylustrator
+    plt.figure(1).ax_dict = {ax.get_label(): ax for ax in plt.figure(1).axes}
+    plt.figure(1).text(0.020760, 0.962231, plot_title, transform=plt.figure(1).transFigure)
+
+    return fig if return_fig else None
 
 def show3DStack(image_3d, axis = 2, cmap = "gray", clim = None, extent = (0, 1, 0, 1)):
     if clim is None:
@@ -2204,6 +2273,32 @@ class ZernikeProbe2(nn.Module):
             Psi = Psi * self.cb
 
         return Psi
+
+from skimage.filters import gaussian
+def probe_radius(C, dx, meta, int_threshold=95e-2, mprobe = 128) -> float :
+    qn = fourier_coordinates_2D([mprobe,mprobe],np.array(dx)/1.6)
+    q = th.as_tensor(qn)
+    A = np.linalg.norm(qn,axis=0) * meta.wavelength < meta.alpha_rad
+    A = gaussian(A,0.75)
+    probe_gen = ZernikeProbeSingle(q, meta.wavelength, fft_shifted=False)
+    Psi = probe_gen(th.tensor(C.get()),th.tensor(A))
+    psi = th.fft.fftshift(th.fft.ifft2(Psi))
+
+    sumi = []
+    radii = []
+    sumabs = th.sum(th.abs(psi)**2)
+    abs_threshold = 95e-2
+    min_radius = 1e4
+    for ri in range(2,mprobe//2,2):
+        mask = th.fft.fftshift(th.norm(th.as_tensor(fourier_coordinates_2D([mprobe,mprobe],np.array([1/mprobe,1/mprobe]))),dim=0)) <= ri
+        ss = th.sum(th.abs(psi * mask)**2)
+        sss = ss/sumabs
+        if sss > abs_threshold and ri < min_radius:
+            min_radius = ri
+        sumi.append(sss)
+        radii.append(ri)
+
+    return min_radius
 
 class ZernikeProbeSingle(nn.Module):
     def __init__(self, q: th.Tensor, lam, fft_shifted=True):
