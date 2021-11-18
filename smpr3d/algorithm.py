@@ -235,7 +235,7 @@ import torch as th
 import torch.nn as nn
 import torch.nn.functional as F
 torch.set_printoptions(precision=10)
-from tqdm import trange
+from tqdm import trange, tqdm
 #data
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
@@ -246,7 +246,7 @@ import smpr3d.util as utilities
 from .operators import Pupil
 from .modules import SingleSlicePropagation, Defocus, MultislicePropagation
 from .regularizers import Regularizer
-
+from torch.utils.data import BatchSampler, SequentialSampler
 import scipy.io as sio
 import numpy as np
 
@@ -332,7 +332,7 @@ class TorchTomographySolver:
         """
 
         self.shape = kwargs.get("shape")
-
+        self.beam_batch_size = kwargs.get("beam_batch_size", 1)
         self.shuffle = kwargs.get("shuffle", True)
         self.optim_max_itr = kwargs.get("maxitr", 100)
         self.optim_step_size = kwargs.get("step_size", 0.1)
@@ -503,21 +503,24 @@ class TorchTomographySolver:
                         {'params': defocus_list, 'lr': self.dr_step_size})
                 optimizer = optim.SGD(optimizer_params)
 
-            beam_coordinates = self.s_meta.all_beams_coords
-            q_dft = self.s_meta.q_dft
-            w = th.exp(2j * np.pi * th.sum(q_dft[None, :, :, :] * beam_coordinates[:, :, None, None], 1))
-            tilted_input_waves = th.tile(w, (1, *self.s_meta.f))
-            sy = tilted_input_waves.shape[1] // 2
-            sx = tilted_input_waves.shape[2] // 2
-            CS = tilted_input_waves[:, sy:sy + self.s_meta.M[0], sx:sx + self.s_meta.M[1]]
-            css = th.linalg.norm(CS, axis=(1, 2))
-            tilted_input_waves /= css[:, None, None]
-            del css
+            beam_coordinates = self.s_meta.all_beams_coords.to(self.device)
+            q_dft = self.s_meta.q_dft.to(self.device)
+
             # field_in is (N_batch, NY, NX)
             # forward scattering
-            for i_beam in trange(tilted_input_waves.shape[0], desc='Beams: '):
-                field_in = tilted_input_waves[i_beam].to(self.device)
-                estimated_amplitudes = self.tomography_obj(self.obj, [defocus_list[i_beam]], field_in, yx_shift)
+            sampler = BatchSampler(SequentialSampler(range(beam_coordinates.shape[0])),
+                                   batch_size=self.beam_batch_size, drop_last=False)
+
+            # for i_beam in trange(beam_coordinates.shape[0], desc='Beams: '):
+            for i_beam in tqdm(sampler, desc='Beams: '):
+                w = th.exp(2j * np.pi * th.sum(q_dft[None, :, :, :] * beam_coordinates[i_beam, :, None, None], 1))
+                field_in = th.tile(w, (1, *self.s_meta.f))
+                sy = field_in.shape[1] // 2
+                sx = field_in.shape[2] // 2
+                CS = field_in[:, sy:sy + self.s_meta.M[0], sx:sx + self.s_meta.M[1]]
+                field_in /= th.linalg.norm(CS, axis=(1, 2))[:, None, None]
+                field_in.requires_grad = False
+                estimated_amplitudes = self.tomography_obj(self.obj, defocus_list[i_beam], field_in, yx_shift)
                 # in-plane rotation estimation
 
                 if not forward_only:
@@ -539,10 +542,10 @@ class TorchTomographySolver:
                     #     self.dataset.update_amplitudes(amplitudes, rotation_idx)
 
                     # compute cost
-                    estimated_amplitudes = estimated_amplitudes[...,0] * field_in.conj()
+                    estimated_amplitudes = estimated_amplitudes * field_in.conj()
 
                     cost = self.cost_function(th.view_as_real(estimated_amplitudes),
-                                              th.view_as_real(amplitudes[..., i_beam].to(self.device)))
+                                              th.view_as_real(amplitudes[i_beam].to(self.device)))
                     running_cost += cost.item()
 
                     # backpropagation
@@ -685,6 +688,7 @@ class AETDataset(Dataset):
 
 
 from .operators import ImageShiftGradientBased
+
 class PhaseContrastScattering(nn.Module):
 
     def __init__(self, shape, voxel_size, wavelength, s_meta, sigma=None, binning_factor=1, pad_size=[0, 0], **kwargs):
@@ -693,8 +697,8 @@ class PhaseContrastScattering(nn.Module):
         Starts from a plane wave, 3D object, and a list of defocus distance (in Angstrom).
         Computes intensity phase contrast image after electron scatters through the sample using multislice algorithm
         Required Args:
-                shape: shape of the object in [y, x, z]
-                voxel_size: size of voxel in [y, x, z]
+                shape: shape of the object in [z, y, x]
+                voxel_size: size of voxel in [z, y, x]
                 wavelength: wavelength of probing wave, scalar
 
         Optional Args [default]:
@@ -712,26 +716,24 @@ class PhaseContrastScattering(nn.Module):
 
         # forward propagation
         self.shape_prop = self.shape.copy()
-        self.shape_prop[2] //= self.binning_factor
+        self.shape_prop[0] //= self.binning_factor
         self.voxel_size_prop = self.voxel_size.copy()
-        self.voxel_size_prop[2] *= self.binning_factor
-        self._propagation = MultislicePropagation(
-            self.shape_prop, self.voxel_size_prop, self.wavelength, **kwargs)
+        self.voxel_size_prop[0] *= self.binning_factor
+        self._propagation = MultislicePropagation(self.shape_prop, self.voxel_size_prop, self.wavelength, **kwargs)
 
         self.sigma = sigma
         if self.sigma is None:
             self.sigma = (2 * np.pi / self.wavelength) * \
-                          self.voxel_size_prop[2]
+                          self.voxel_size_prop[0]
 
         # filter with aperture
-        self._pupil = Pupil(
-            self.shape[0:2], self.voxel_size[0], self.wavelength, **kwargs)
+        self._pupil = Pupil(self.shape[1:], self.voxel_size[0], self.wavelength, **kwargs)
 
         # defocus operator
         self._defocus = Defocus(**kwargs)
 
         # shift correction
-        self._shift = ImageShiftGradientBased(self.shape[0:2], **kwargs)
+        self._shift = ImageShiftGradientBased(self.shape[1:], **kwargs)
 
     def forward(self, obj, defocus_list, field_in, yx_shift=None):
         # bin object
@@ -743,15 +745,13 @@ class PhaseContrastScattering(nn.Module):
         # pupil
         # field = self._pupil(field)
         # defocus
-        # field = field_defocus(field, self._propagation.propagate.kernel_phase, defocus_list)
-        field = self._defocus(
-            field, self._propagation.propagate.kernel_phase, defocus_list)
-        # shift
-        field = self._shift(field, yx_shift)
-        # crop
-        field = F.pad(field, (0, 0, \
-                              -1 * self.pad_size[1], -1 * self.pad_size[1], \
-                                                  -1 * self.pad_size[0], -1 * self.pad_size[0]))
+        # field = self._defocus(field, self._propagation.propagate.kernel_phase, defocus_list)
+        # # shift
+        # field = self._shift(field, yx_shift)
+        # # crop
+        # field = F.pad(field, (0, 0, \
+        #                       -1 * self.pad_size[1], -1 * self.pad_size[1], \
+        #                                           -1 * self.pad_size[0], -1 * self.pad_size[0]))
         # compute amplitude
         # amplitudes = complex_abs(field)
 

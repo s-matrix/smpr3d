@@ -374,6 +374,28 @@ def r2c(real_tensor):
     return real_tensor+0j
 
 # Cell
+# def convolve_kernel(tensor_in, kernel, n_dim=1, flag_inplace=True):
+#     '''
+#     Compute convolution FFT(tensor_in) and kernel
+#     Required Args:
+#         tensor_in: variable 1 in real space
+#         kernel: variable 2 in reciprocal space
+#
+#     Optional Args [default]
+#         n_dim: number of dimensions to compute convolution [1]
+#         flag_inplace: Whether or not compute convolution inplace, result saved in 'tensor_in' [True]
+#     '''
+#     dim = [-n_dim+i for i in range(n_dim)]
+#     if flag_inplace:
+#         tensor_in  = th.fft.fftn(tensor_in, dim=dim)
+#         tensor_in *= kernel
+#         tensor_in  = th.fft.ifftn(tensor_in, dim=dim)
+#         return tensor_in
+#     else:
+#         output  = th.fft.fftn(tensor_in, dim=dim)
+#         output *= kernel
+#         output  = th.fft.ifftn(output, dim=dim)
+#         return output
 def convolve_kernel(tensor_in, kernel, n_dim=1, flag_inplace=True):
     '''
     Compute convolution FFT(tensor_in) and kernel
@@ -385,16 +407,15 @@ def convolve_kernel(tensor_in, kernel, n_dim=1, flag_inplace=True):
         n_dim: number of dimensions to compute convolution [1]
         flag_inplace: Whether or not compute convolution inplace, result saved in 'tensor_in' [True]
     '''
-    dim = [-n_dim+i for i in range(n_dim)]
     if flag_inplace:
-        tensor_in  = th.fft.fftn(tensor_in, dim=dim)
+        tensor_in  = th.fft.fft2(tensor_in)
         tensor_in *= kernel
-        tensor_in  = th.fft.ifftn(tensor_in, dim=dim)
+        tensor_in  = th.fft.ifft2(tensor_in)
         return tensor_in
     else:
-        output  = th.fft.fftn(tensor_in, dim=dim)
+        output  = th.fft.fft2(tensor_in)
         output *= kernel
-        output  = th.fft.ifftn(output, dim=dim)
+        output  = th.fft.ifft2(output)
         return output
 
 def generate_grid_1d(shape, pixel_size = 1, flag_fourier = False, dtype = th.float32, device = th.device('cuda')):
@@ -472,7 +493,7 @@ def generate_angular_spectrum_kernel(shape, pixel_size, wavelength, \
     # prop_kernel = 2.0 * np.pi * pupil_crop * \
     #               ((1./wavelength)**2 - kx_lin**2 - ky_lin**2) ** 0.5
     prop_kernel = -1 * np.pi * wavelength * pupil_crop * (kx_lin**2 + ky_lin**2)
-    return 1j *prop_kernel
+    return prop_kernel
 
 # Cell
 class Pupil(nn.Module):
@@ -690,6 +711,31 @@ class ComplexAbs(th.autograd.Function):
 
 
 # Cell
+# class BinObject(th.autograd.Function):
+#     '''
+#     Class that bins the object along the direction of beam propagation (z)
+#     inputs:
+#     obj_in: input object
+#     factor: factor at which the object will be binned
+#     '''
+#     @staticmethod
+#     def forward(ctx, obj_in, factor):
+#         assert (obj_in.shape[2] % factor) == 0
+#         assert len(obj_in.shape) == 3
+#         ctx.factor = factor
+#         if factor == 1:
+#             return obj_in
+#         n_y, n_x, n_z = obj_in.shape
+#         obj_out = obj_in.reshape(n_y, n_x, n_z//factor, factor).sum(3)
+#         return obj_out
+#
+#     @staticmethod
+#     def backward(ctx, grad_output):
+#         factor = ctx.factor
+#         if factor == 1:
+#             return grad_output, None
+#
+#         return grad_output.repeat_interleave(factor, dim=-1), None
 class BinObject(th.autograd.Function):
     '''
     Class that bins the object along the direction of beam propagation (z)
@@ -699,13 +745,13 @@ class BinObject(th.autograd.Function):
     '''
     @staticmethod
     def forward(ctx, obj_in, factor):
-        assert (obj_in.shape[2] % factor) == 0
+        assert (obj_in.shape[0] % factor) == 0
         assert len(obj_in.shape) == 3
         ctx.factor = factor
         if factor == 1:
             return obj_in
-        n_y, n_x, n_z = obj_in.shape
-        obj_out = obj_in.reshape(n_y, n_x, n_z//factor, factor).sum(3)
+        n_z, n_y, n_x = obj_in.shape
+        obj_out = obj_in.reshape(n_z//factor, factor, n_y, n_x).sum(1)
         return obj_out
 
     @staticmethod
@@ -713,8 +759,7 @@ class BinObject(th.autograd.Function):
         factor = ctx.factor
         if factor == 1:
             return grad_output, None
-
-        return grad_output.repeat_interleave(factor, dim=-1), None
+        return grad_output.repeat_interleave(factor, dim=0), None
 
 # Cell
 def AtF2(z, psi, r, out):

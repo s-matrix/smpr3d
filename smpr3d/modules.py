@@ -13,6 +13,25 @@ from .operators import generate_angular_spectrum_kernel, convolve_kernel
 th.autograd.set_detect_anomaly(True)
 
 # Cell
+# class SingleSlicePropagation(nn.Module):
+#     '''
+#     Class for propagation for single slice
+#     '''
+#     def __init__(self, shape, pixel_size, wavelength, \
+#                  numerical_aperture=None,  flag_band_limited=False, \
+#                  dtype=th.float32, device=th.device('cuda')):
+#         super(SingleSlicePropagation, self).__init__()
+#         self.kernel_phase     = generate_angular_spectrum_kernel(shape, pixel_size, wavelength, \
+#                                                                  numerical_aperture=None,  flag_band_limited=False, \
+#                                                                  dtype=dtype, device=device)
+#
+#     def forward(self, field_in, propagation_distance):
+#         if propagation_distance == 0:
+#             return field_in
+#         kernel = th.exp(abs(propagation_distance) * self.kernel_phase)
+#         kernel = kernel if propagation_distance > 0. else th.conj(kernel)
+#         field_out = convolve_kernel(field_in, kernel, 2, False)
+#         return field_out
 class SingleSlicePropagation(nn.Module):
     '''
     Class for propagation for single slice
@@ -28,11 +47,12 @@ class SingleSlicePropagation(nn.Module):
     def forward(self, field_in, propagation_distance):
         if propagation_distance == 0:
             return field_in
-        kernel = th.exp(abs(propagation_distance) * self.kernel_phase)
-        kernel = kernel if propagation_distance > 0. else th.conj(kernel)
-        field_out = convolve_kernel(field_in, kernel, 2, False)
-        return field_out
-
+        # kernel = th.exp(abs(propagation_distance) * self.kernel_phase)
+        # kernel = kernel if propagation_distance > 0. else th.conj(kernel)
+        field_in  = th.fft.fft2(field_in, norm='ortho')
+        field_in *= th.exp(1j * propagation_distance * self.kernel_phase)
+        field_in  = th.fft.ifft2(field_in, norm='ortho')
+        return field_in
 
 # Cell
 class Defocus(nn.Module):
@@ -40,7 +60,7 @@ class Defocus(nn.Module):
         super(Defocus, self).__init__()
         self.device = device
 
-    def forward(self, field, kernel, defocus_list= [0.0]):
+    def forward(self, field, kernel, defocus_list= th.tensor([0.0])):
         field = field.cuda()
         kernel = kernel.cuda()
         fft_n_dim = 2
@@ -49,41 +69,69 @@ class Defocus(nn.Module):
         field = field.unsqueeze(2).repeat(1, 1, len(defocus_list)).permute(2,0,1)
         field_out = field.clone()
         for defocus_idx in range(len(defocus_list)):
-            kernel_temp = th.exp((defocus_list[defocus_idx]) * kernel)
+            kernel_temp = th.exp(1j * defocus_list[defocus_idx] * kernel)
             kernel_temp = kernel_temp if defocus_list[defocus_idx] > 0. else th.conj(kernel_temp)
             field_out[defocus_idx,...] = field[defocus_idx,...] * kernel_temp
         field_out = th.fft.ifftn(field_out, dim=dim).permute(1,2,0)
         return field_out.to(self.device)
 
 # Cell
+# class MultislicePropagation(nn.Module):
+#     def __init__(self, shape, voxel_size, wavelength,  numerical_aperture=None, dtype=th.float32, device=th.device('cuda'),   **kwargs):
+#         super(MultislicePropagation, self).__init__()
+#         self.shape            = shape
+#         self.voxel_size       = voxel_size
+#         self.device           = device
+#         self.distance_to_center = (self.shape[2]/2. - 1/2.) * self.voxel_size[2]
+#         self.propagate        = SingleSlicePropagation(self.shape[0:2], self.voxel_size[0],  wavelength, \
+#                                                        numerical_aperture=None, flag_band_limited=False, \
+#                                                        dtype=dtype, device=th.device('cuda'))
+#     def forward(self, obj, field_in=None):
+#         field = field_in
+#         if field is None:
+#             field = obj[:,:,0]
+#         else:
+#             field *= obj[:,:,0]
+#         field = field.cuda()
+#         field = self.propagate(field, self.voxel_size[2])
+#         slice_per_gpu = 500
+#         for idx_start in range(1, self.shape[2], slice_per_gpu):
+#             idx_end = np.min([self.shape[2], idx_start+slice_per_gpu])
+#             idx_slice = slice(idx_start, idx_end)
+#             obj_temp = obj[:,:,idx_slice].cuda()
+#             for layer_idx in range(0, obj_temp.shape[2]):
+#                 field *= obj_temp[:,:,layer_idx]
+#                 if layer_idx < self.shape[2] - 1:
+#                     #Propagate forward one layer
+#                     field = self.propagate(field, self.voxel_size[2])
+#                 else:
+#                     field = self.propagate(field, -1. * self.distance_to_center)
+#         return field.to(self.device)
 class MultislicePropagation(nn.Module):
-    def __init__(self, shape, voxel_size, wavelength,  numerical_aperture=None, dtype=th.float32, device=th.device('cuda'),   **kwargs):
+    def __init__(self, shape,
+                 voxel_size,
+                 wavelength,
+                 numerical_aperture=None,
+                 dtype=th.float32,
+                 device=th.device('cuda'),
+                 **kwargs):
         super(MultislicePropagation, self).__init__()
-        self.shape            = shape
-        self.voxel_size       = voxel_size
-        self.device           = device
-        self.distance_to_center = (self.shape[2]/2. - 1/2.) * self.voxel_size[2]
-        self.propagate        = SingleSlicePropagation(self.shape[0:2], self.voxel_size[0],  wavelength, \
+        self.shape = shape
+        self.voxel_size = voxel_size
+        self.device = device
+        self.distance_to_center = (self.shape[0]/2. - 1/2.) * self.voxel_size[0]
+        self.propagate = SingleSlicePropagation(self.shape[1:], self.voxel_size[1],  wavelength, \
                                                        numerical_aperture=None, flag_band_limited=False, \
                                                        dtype=dtype, device=th.device('cuda'))
-    def forward(self, obj, field_in=None):
-        field = field_in
-        if field is None:
-            field = obj[:,:,0]
-        else:
-            field *= obj[:,:,0]
-        field = field.cuda()
-        field = self.propagate(field, self.voxel_size[2])
-        slice_per_gpu = 500
-        for idx_start in range(1, self.shape[2], slice_per_gpu):
-            idx_end = np.min([self.shape[2], idx_start+slice_per_gpu])
+    def forward(self, obj, field):
+        slice_per_gpu = 600
+        for idx_start in range(0, self.shape[0], slice_per_gpu):
+            idx_end = np.min([self.shape[0], idx_start+slice_per_gpu])
             idx_slice = slice(idx_start, idx_end)
-            obj_temp = obj[:,:,idx_slice].cuda()
-            for layer_idx in range(0, obj_temp.shape[2]):
-                field *= obj_temp[:,:,layer_idx]
-                if layer_idx < self.shape[2] - 1:
-                    #Propagate forward one layer
-                    field = self.propagate(field, self.voxel_size[2])
-                else:
-                    field = self.propagate(field, -1. * self.distance_to_center)
+            obj_temp = obj[idx_slice, :, :].cuda()
+            for layer_idx in range(0, obj_temp.shape[0]):
+                field *= obj_temp[layer_idx, :, :]
+                if layer_idx < self.shape[0] - 1:
+                    field = self.propagate(field, self.voxel_size[0])
+        field = self.propagate(field, -self.distance_to_center)
         return field.to(self.device)
