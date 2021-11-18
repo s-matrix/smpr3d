@@ -329,9 +329,9 @@ class Positivity(ProximalOperator):
 		x_real = th.real(x)
 		x_imag = th.imag(x)
 		if self.real:
-			x_real = self._bound_real_value(x_real, 0, self.real)
+			x_real = self._bound_real_value(x_real, 0)
 		if self.imag:
-			x_imag = self._bound_real_value(x_imag, 0, self.imag)
+			x_imag = self._bound_real_value(x_imag, 0)
 		return x_real + 1j * x_imag
 
 class Negativity(Positivity):
