@@ -63,8 +63,8 @@ def configure_node(dist_backend, init_method):
     logging.info(f'rank {args.rank} avail gpus: {[x.id for x in GPUtil.getGPUs()]}')
     logging.info(f'Selecting device: {args.gpu}')
     cuda.select_device(args.gpu)
-    dist.init_process_group(backend=args.dist_backend, rank=args.rank, world_size=args.world_size,
-                            init_method=init_method)
+    # dist.init_process_group(backend=args.dist_backend, rank=args.rank, world_size=args.world_size,
+    #                         init_method=init_method)
 
     ram_gpu_free_GB = []
     ram_cpu_free_GB = psutil.virtual_memory().available / 2 ** 30
